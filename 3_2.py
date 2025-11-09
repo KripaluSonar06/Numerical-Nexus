@@ -82,3 +82,4 @@ x, w = leggauss(n)
 
 A = find_A(n, x)
 B = find_B(n, x)
+
