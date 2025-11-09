@@ -1,8 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 import matplotlib.pyplot as plt
-
-# Compute nodes (x) and weights (w)
+import os
 
 def find_A(n, x):
     # Q
@@ -82,10 +81,14 @@ def find_B(n, x):
     
 n = int(input("Enter n value for roots-weights graph: "))
 x, w = leggauss(n)
+ans = [x, w]
+ans = [list(row) for row in zip(*ans)]
 
 # Display results
-# for i in range(64):
-#     print(f"x[{i:2d}] = {x[i]: .16f}, w[{i:2d}] = {w[i]: .16f}")
+for i in range(n):
+    print(f"x[{i:2d}] = {x[i]: .16f}, w[{i:2d}] = {w[i]: .16f}")
+np.savetxt("roots-weights.csv", ans, delimiter=" | ", fmt="%.6f")
+os.startfile("roots-weights.csv")
 
 plt.figure(figsize=(8,5))
 plt.plot(x, w, 'o-', color='black', markersize=6, label='Gauss-Legendre weights')
@@ -101,8 +104,10 @@ x, w = leggauss(n)
 
 A = find_A(n, x)
 # print(A)
-np.savetxt("A_matrix.csv", A, delimiter=",", fmt="%.6f")
+np.savetxt("A_matrix.csv", A, delimiter=" | ", fmt="%.6f")
+os.startfile("A_matrix.csv")
 
 B = find_B(n, x)
 # print(B)
-np.savetxt("B_matrix.csv", B, delimiter=",", fmt="%.6f")
+np.savetxt("B_matrix.csv", B, delimiter=" | ", fmt="%.6f")
+os.startfile("B_matrix.csv")
