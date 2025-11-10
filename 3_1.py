@@ -8,35 +8,19 @@ def find_A(n, x):
     # Q
     Q = np.zeros((n + 2,n + 2))
         
-    for i in range(0, n + 2):
-        for j in range(0, n + 2):
-            if i == 0 :
-                Q[0][j] = (-1) ** j
-            elif i == n + 1:
-                Q[n + 1][j] = 1 ** j
-            else:
-                Q[i][j] = x[i - 1] ** j
-        
+    for i in range(n + 2):
+        for j in range(n + 2):
+            Q[i][j] = x[i] ** j
+
     # C
     C = np.zeros((n + 2,n + 2))
-    for j in range(0, n + 2):
-        if j == 0:
-            C[0][j] = 0
-        else:
-            C[0][j] = j * ((-1) ** (j - 1))
         
-    for i in range(1, n + 1):
-        for j in range(0, n + 2):
-            if j == 0:
+    for i in range(n + 2):
+        for j in range(n + 2):
+            if j < 1:
                 C[i][j] = 0
             else:
-                C[i][j] = j * (x[i - 1] ** (j - 1))
-            
-    for j in range(0, n + 2):
-        if j == 0:
-            C[n + 1][j] = 0
-        else:
-            C[n + 1][j] = j * (1 ** (j - 1))
+                C[i][j] = j * (x[i] ** (j - 1))
         
     Q_inv = np.linalg.inv(Q)
     A = np.matmul(C, Q_inv)
@@ -44,44 +28,55 @@ def find_A(n, x):
 
 def find_B(n, x):
     # Q
-    Q = np.zeros((n + 2,n + 2))
+    Q = np.zeros((n + 2, n + 2))
         
-    for i in range(0, n + 2):
-        for j in range(0, n + 2):
-            if i == 0 :
-                Q[0][j] = (-1) ** j
-            elif i == n + 1:
-                Q[n + 1][j] = 1 ** j
-            else:
-                Q[i][j] = x[i - 1] ** j
+    for i in range(n + 2):
+        for j in range(n + 2):
+            Q[i][j] = x[i] ** j
         
     # C
     C = np.zeros((n + 2,n + 2))
-    for j in range(0, n + 2):
-        if j == 0 or j == 1:
-            C[0][j] = 0
-        else:
-            C[0][j] = j * (j - 1) * ((-1) ** (j - 2))
         
-    for i in range(1, n + 1):
-        for j in range(0, n + 2):
-            if j == 0 or j == 1:
+    for i in range(n + 2):
+        for j in range(n + 2):
+            if j < 2:
                 C[i][j] = 0
             else:
-                C[i][j] = j * (j - 1) * (x[i - 1] ** (j - 2))
-            
-    for j in range(0, n + 2):
-        if j == 0 or j == 1:
-            C[n + 1][j] = 0
-        else:
-            C[n + 1][j] = j * (j - 1) * (1 ** (j - 2))
+                C[i][j] = j * (j - 1) * (x[i] ** (j - 2))
         
     Q_inv = np.linalg.inv(Q)
     B = np.matmul(C, Q_inv)
     return B
+
+def bary_weights(x):
+    n = len(x)
+    w = np.ones(n)
+    for j in range(n):
+        diff = x[j] - np.delete(x, j)
+        w[j] = 1.0 / np.prod(diff)
+    return w
+
+def diff_matrix(x):
+    n = len(x)
+    w = bary_weights(x)
+    D = np.zeros((n, n))
+    for i in range(n):
+        xi = x[i]
+        for j in range(n):
+            if i != j:
+                D[i, j] = w[j] / (w[i] * (xi - x[j]))
+    D[np.arange(n), np.arange(n)] = -np.sum(D, axis=1)
+    return D
+
+def roots_weights(n):
+    xi, wi = leggauss(n)
+    x = 0.5 * (xi + 1)
+    w = 0.5 * wi
+    return x, w
     
 n = int(input("Enter n value for roots-weights graph: "))
-x, w = leggauss(n)
+
+x, w = roots_weights(n)
 ans = pd.DataFrame([x, w])
 ans_T = ans.T
 
@@ -101,14 +96,25 @@ plt.legend()
 plt.show()
 
 n = int(input("Enter n value for A and B matrix: "))
-x, w = leggauss(n)
+x_i, w_i = roots_weights(n)
 
-A = find_A(n, x)
+# include endpoints (weights at endpoints are zero for Gauss–Legendre)
+x = np.concatenate(([0.0], x_i, [1.0]))
+w = np.concatenate(([0.0], w_i, [0.0]))
+
+if n < 20:
+    A = find_A(n, x)
+    B = find_B(n, x)
+else:
+    D = diff_matrix(x)
+    D2 = D @ D
+    A = D
+    B = D2
+
 # print(A)
 np.savetxt("A_matrix.csv", A, delimiter=",", fmt="%.6f")
 os.startfile("A_matrix.csv")
 
-B = find_B(n, x)
 # print(B)
 np.savetxt("B_matrix.csv", B, delimiter=",", fmt="%.6f")
 os.startfile("B_matrix.csv")

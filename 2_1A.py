@@ -28,8 +28,10 @@ while True:
             print(f"Found no Factorial which is not a Harshad number in the range ({i1}! ... {n}!)")
             break
     else:
-        print(f"{i}! = {f} is NOT a Harshad number!!!")
-        i+=1
-        f *= i
-        print(f"Next factorial is {i}! = {f}")
-        break
+        print(f"{i}! is NOT a Harshad number!!!")
+        op = input("Want to find the next factorial that is NOT a Harshad number [Y/y for yes] : ")
+        if op == 'Y' or op == 'y':
+            i += 1
+            f *= i
+        else:
+            break
