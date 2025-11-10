@@ -1,0 +1,87 @@
+.assignments-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  padding: 4rem 2rem;
+  position: relative;
+}
+
+.assignments-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 50%, rgba(0, 217, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.assignments-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.page-heading {
+  font-size: 2.5rem;
+  text-align: center;
+  color: #f8fafc;
+  margin-bottom: 3rem;
+  font-weight: 700;
+}
+
+.assignments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.assignment-card {
+  padding: 2rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.assignment-card h2 {
+  font-size: 1.8rem;
+  color: #00d9ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.assignment-card .description {
+  font-size: 1.1rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.progress-section {
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 217, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 217, 255, 0.3);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d9ff, #4f46e5, #ff00ff);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+}
+
+.progress-text {
+  font-size: 0.95rem;
+  color: #10b981;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}

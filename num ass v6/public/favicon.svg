@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      .favicon-circle { fill: #4f46e5; }
+      .favicon-text { fill: #00d9ff; font-size: 20px; font-weight: bold; font-family: Arial; }
+    </style>
+  </defs>
+  <!-- Background circle -->
+  <circle class="favicon-circle" cx="16" cy="16" r="15"/>
+  <!-- Accent glow -->
+  <circle cx="16" cy="16" r="14" fill="none" stroke="#00d9ff" stroke-width="1" opacity="0.5"/>
+  <!-- M for Math -->
+  <text class="favicon-text" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M</text>
+</svg>

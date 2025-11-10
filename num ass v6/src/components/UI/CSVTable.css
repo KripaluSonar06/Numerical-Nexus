@@ -1,0 +1,75 @@
+.csv-table-container {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(0, 217, 255, 0.05));
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.csv-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.csv-table-header h3 {
+  color: #00d9ff;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.csv-download-btn {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(79, 70, 229, 0.2));
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  color: #00d9ff;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.csv-download-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.3), rgba(79, 70, 229, 0.3));
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+}
+
+.csv-table-wrapper {
+  overflow-x: auto;
+}
+
+.csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.csv-table thead {
+  background: rgba(79, 70, 229, 0.1);
+}
+
+.csv-table th {
+  padding: 1rem;
+  text-align: left;
+  color: #00d9ff;
+  font-weight: 600;
+  border-bottom: 2px solid rgba(0, 217, 255, 0.3);
+}
+
+.csv-table td {
+  padding: 1rem;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.1);
+}
+
+.csv-table tbody tr:hover {
+  background: rgba(0, 217, 255, 0.05);
+}
+
+.csv-table-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #8b92a9;
+  font-style: italic;
+}

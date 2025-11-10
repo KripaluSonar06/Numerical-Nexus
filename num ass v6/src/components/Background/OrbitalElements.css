@@ -1,0 +1,37 @@
+.orbital-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 400px;
+  height: 400px;
+  margin: -200px 0 0 -200px;
+  pointer-events: none;
+}
+
+.orbital-element {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.1;
+  animation: orbit 20s linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(200px) rotate(0deg);
+    opacity: 0.05;
+  }
+  25% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  75% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: rotate(360deg) translateX(200px) rotate(-360deg);
+    opacity: 0.05;
+  }
+}
