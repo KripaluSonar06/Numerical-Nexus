@@ -1,3 +1,5 @@
+import sys
+
 def factorial(i):
     f = 1;
     while i:
@@ -14,6 +16,8 @@ def Check_Harshad(f):
     result = f % sum
     return (result == 0)
     
+    
+sys.set_int_max_str_digits(1000000)
 i = int(input("From which factorial You want to start? => "))
 i1 = i
 n = int(input("At which factorial You want to end? => "))
