@@ -28,15 +28,18 @@ while True:
     else:
         # print(f"Not a Harshad Number")
         curr = 0
-    if(curr >= limit):
+    if(curr == limit):
         print(f"{limit} consecutive Harshad numbers found!")
-        print(f"Numbers are - ")
-        for j in range(limit):
-            print(f"{i + j - limit + 1}")
-        break
+        if not Check_Harshad(i + 1):
+            print(f"Numbers are - ")
+            for j in range(limit):
+                print(f"{i + j - limit + 1}")
+            break
+        else:
+            print(f"These numbers are not exactly {limit} consecutive Harshad numbers, as {i + 1} is also a Harshad number")
     i += 1
     if i > f: 
-        print(f"Did not find {limit} consecutive Harshad numbers in range [{i1}, {f}]")
+        print(f"Did not find exactly {limit} consecutive Harshad numbers in range [{i1}, {f}]")
         print(f"In the give range Maximum {max_curr} consecutive Harshad numbers were found - ")
         for j in range(max_curr):
             print(f"{max_curr_end + j - max_curr + 1}")

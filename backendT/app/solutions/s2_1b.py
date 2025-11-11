@@ -1,55 +1,51 @@
 # app/solutions/s2_1b.py
 
-from typing import Dict, Any, List
+def Check_Harshad(num: int) -> bool:
+    """Return True if num is a Harshad (Niven) number."""
+    digit_sum = sum(int(d) for d in str(num))
+    if digit_sum == 0:
+        return False
+    return num % digit_sum == 0
 
-def is_harshad(num: int) -> bool:
-    """Return True if num is a Harshad number."""
-    s = sum(int(d) for d in str(num))
-    return num % s == 0
 
-def solve_s2_1b(params: Dict[str, Any]) -> Dict[str, Any]:
+def solve_s2_1b(params: dict):
     """
-    Finds consecutive Harshad numbers within a given range.
-
-    Args:
-        params: dict with keys:
-            - "start": int — starting number
-            - "end": int — ending number
-            - "limit": int — how many consecutive Harshad numbers to find
-            - "update_interval": int — how frequently to record progress updates (optional)
-
+    Finds a sequence of consecutive Harshad numbers within a given range.
+    If an exact sequence of the given limit is not found, it reports the longest streak.
+    
+    Parameters:
+        params: {
+            "start": int,
+            "end": int,
+            "limit": int,
+            "update": int   # optional, default=100
+        }
     Returns:
-        dict containing:
-            {
-                "range_checked": [start, end],
-                "limit": limit,
-                "found": bool,
-                "found_sequence": [ ... ] or None,
-                "max_consecutive": int,
-                "max_consecutive_sequence": [ ... ],
-                "progress_updates": [ ... ],
-                "summary": str
-            }
+        dict with details about found sequences and progress
     """
 
+    # --- Read inputs safely ---
     start = int(params.get("start", 1))
-    end = int(params.get("end", start))
+    end = int(params.get("end", 1000))
     limit = int(params.get("limit", 5))
-    update = int(params.get("update_interval", 1000))
+    update = int(params.get("update", 100))
 
     i = start
     curr = 0
     max_curr = 0
     max_curr_end = 0
-    progress_updates: List[str] = []
+    found_sequence = []
 
-    progress_updates.append(f"Checking between {i} and {min(i + update - 1, end)}")
+    progress_updates = []
 
+    # --- Main search loop ---
     while i <= end:
-        if (i - start) % update == 0 and i != start:
-            progress_updates.append(f"Checking between {i} and {min(i + update - 1, end)}")
+        if (i - start) % update == 0:
+            progress_updates.append(
+                f"Checking between {i} and {min(i + update - 1, end)} ..."
+            )
 
-        if is_harshad(i):
+        if Check_Harshad(i):
             curr += 1
             if curr > max_curr:
                 max_curr = curr
@@ -57,46 +53,42 @@ def solve_s2_1b(params: Dict[str, Any]) -> Dict[str, Any]:
         else:
             curr = 0
 
-        if curr >= limit:
-            found_sequence = [i + j - limit + 1 for j in range(limit)]
-            summary = f"Found {limit} consecutive Harshad numbers starting at {found_sequence[0]}."
-            return {
-                "range_checked": [start, end],
-                "limit": limit,
-                "found": True,
-                "found_sequence": found_sequence,
-                "max_consecutive": limit,
-                "max_consecutive_sequence": found_sequence,
-                "progress_updates": progress_updates,
-                "summary": summary
-            }
-
+        # Found desired consecutive sequence
+        if curr == limit:
+            # Verify if the next number breaks the streak (exact limit)
+            if not Check_Harshad(i + 1):
+                found_sequence = [i + j - limit + 1 for j in range(limit)]
+                break
+            # If next is also Harshad, continue to find a strict end
         i += 1
 
-    # If no full streak found, report the maximum streak
-    max_seq = [max_curr_end + j - max_curr + 1 for j in range(max_curr)]
-    summary = (
-        f"Did not find {limit} consecutive Harshad numbers in range [{start}, {end}]. "
-        f"Maximum streak: {max_curr} consecutive numbers ending at {max_curr_end}."
-    )
-
-    return {
+    # --- Prepare result summary ---
+    result = {
         "range_checked": [start, end],
-        "limit": limit,
-        "found": False,
-        "found_sequence": None,
-        "max_consecutive": max_curr,
-        "max_consecutive_sequence": max_seq,
+        "limit_requested": limit,
         "progress_updates": progress_updates,
-        "summary": summary
+        "found_exact_sequence": bool(found_sequence),
     }
 
-# CLI fallback (for quick testing)
+    if found_sequence:
+        result["found_sequence"] = found_sequence
+        result["summary"] = (
+            f"Found {limit} consecutive Harshad numbers between {found_sequence[0]} and {found_sequence[-1]}."
+        )
+    else:
+        longest_sequence = [
+            max_curr_end + j - max_curr + 1 for j in range(max_curr)
+        ]
+        result["found_sequence"] = longest_sequence
+        result["summary"] = (
+            f"Did not find exactly {limit} consecutive Harshad numbers in range "
+            f"[{start}, {end}]. Maximum consecutive found = {max_curr}."
+        )
+
+    return result
+
+
+# --- Optional: test locally ---
 if __name__ == "__main__":
-    result = solve_s2_1b({
-        "start": 1,
-        "end": 10000,
-        "limit": 3,
-        "update_interval": 1000
-    })
-    print(result["summary"])
+    params = {"start": 1, "end": 1000, "limit": 4, "update": 100}
+    print(solve_s2_1b(params))
