@@ -1,41 +1,31 @@
-# app/solutions/s2_2.py
-
+# app/solutions/s3_1_stream.py
 import numpy as np
-import os
+import csv
 import time
 from numpy.polynomial import polynomial as P_mod
 from numpy.polynomial import legendre as L
-from typing import Dict, Any, Optional
 
+# ============================================================
+# Helper Functions
+# ============================================================
 
-# ===============================================================
-# Utility: ensure output directory exists
-# ===============================================================
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
-# ===============================================================
-# HELPER FUNCTIONS
-# ===============================================================
-
-def build_legendre_tridiagonal(n: int) -> np.ndarray:
-    """Constructs the n×n symmetric tridiagonal matrix (Jacobi matrix)
-    for standard Legendre polynomials."""
+def build_legendre_tridiagonal(n):
+    yield f"Building {n}x{n} symmetric tridiagonal matrix for root finding...\n"
     n_range = np.arange(1.0, n)
     beta = n_range / np.sqrt(4 * n_range**2 - 1)
     J = np.zeros((n, n))
     np.fill_diagonal(J[1:, :], beta)
     np.fill_diagonal(J[:, 1:], beta)
+    yield f"✅ Tridiagonal matrix constructed successfully.\n"
     return J
 
 
 def lu_decomposition_fast(A):
-    """Vectorized LU decomposition with partial pivoting (A = PᵀLU)."""
     A = A.copy()
     n = A.shape[0]
     L = np.eye(n)
     P = np.eye(n)
+
     for k in range(n - 1):
         pivot = np.argmax(np.abs(A[k:, k])) + k
         if A[pivot, k] == 0:
@@ -45,15 +35,15 @@ def lu_decomposition_fast(A):
             P[[k, pivot]] = P[[pivot, k]]
             if k > 0:
                 L[[k, pivot], :k] = L[[pivot, k], :k]
-        L[k + 1 :, k] = A[k + 1 :, k] / A[k, k]
-        A[k + 1 :, k:] -= np.outer(L[k + 1 :, k], A[k, k:])
+        L[k+1:, k] = A[k+1:, k] / A[k, k]
+        A[k+1:, k:] -= np.outer(L[k+1:, k], A[k, k:])
     U = np.triu(A)
     return P, L, U
 
 
 def forward_substitution_fast(L, b):
     n = L.shape[0]
-    y = np.zeros(n)
+    y = np.zeros(n, dtype=float)
     for i in range(n):
         y[i] = b[i] - np.dot(L[i, :i], y[:i])
     return y
@@ -61,9 +51,9 @@ def forward_substitution_fast(L, b):
 
 def backward_substitution_fast(U, y):
     n = U.shape[0]
-    x = np.zeros(n)
+    x = np.zeros(n, dtype=float)
     for i in range(n - 1, -1, -1):
-        x[i] = (y[i] - np.dot(U[i, i + 1 :], x[i + 1 :])) / U[i, i]
+        x[i] = (y[i] - np.dot(U[i, i+1:], x[i+1:])) / U[i, i]
     return x
 
 
@@ -75,10 +65,9 @@ def solve_lu_fast(A, b):
     return x
 
 
-def newton_raphson(f, f_prime, x0, tol=1e-12, max_iter=100) -> Optional[float]:
-    """Finds a root of f(x) using the Newton–Raphson method."""
+def newton_raphson(f, f_prime, x0, tol=1e-12, max_iter=100):
     x = x0
-    for _ in range(max_iter):
+    for i in range(max_iter):
         fx = f(x)
         if abs(fx) < tol:
             return x
@@ -92,119 +81,112 @@ def newton_raphson(f, f_prime, x0, tol=1e-12, max_iter=100) -> Optional[float]:
     return None
 
 
-# ===============================================================
-# MAIN SOLVER FUNCTION
-# ===============================================================
+# ============================================================
+# Main Streaming Function
+# ============================================================
 
-def solve_s2_2(params: Dict[str, Any]) -> Dict[str, Any]:
+def stream_s3_1(params):
     """
-    Computes the Shifted Legendre Polynomial P*_n(t), saves coefficients,
-    companion matrix, roots, and LU-solver results as CSV files,
-    and returns summary data as a dictionary.
+    Stream the computation of Legendre polynomial roots,
+    LU decomposition, and Newton-Raphson results.
     """
-    n = int(params.get("n", 3))
-    if n < 0:
-        raise ValueError("Order n must be non-negative.")
+    try:
+        n_target = int(params.get("n", 5))
+        yield f"Computing {n_target}-order Shifted Legendre Polynomial...\n"
 
-    np.set_printoptions(precision=15, suppress=True)
+        # Filenames
+        COEFFS_FILE = f"legendre_coefficients_{n_target}.csv"
+        COMPANION_FILE = f"companion_matrix_{n_target}.csv"
+        ROOTS_FILE = f"legendre_roots_{n_target}.csv"
+        X_SOLUTION_FILE = f"x_solution_lu_{n_target}.csv"
 
-    # ------------------------------------------------------------
-    # STEP 1: Generate Shifted Legendre Polynomial
-    # ------------------------------------------------------------
-    p_leg_basis = L.Legendre.basis(n, domain=[0, 1])
-    p_power_basis = p_leg_basis.convert(kind=P_mod.Polynomial, domain=[-1, 1])
-    coeffs_low_to_high = p_power_basis.coef
-    coeffs_high_to_low = coeffs_low_to_high[::-1]
+        # Step 1: Compute coefficients
+        p_leg_basis = L.Legendre.basis(n_target, domain=[0, 1])
+        p_power_basis = p_leg_basis.convert(kind=P_mod.Polynomial, domain=[-1, 1])
+        coeffs_low_to_high = p_power_basis.coef
+        coeffs_high_to_low = coeffs_low_to_high[::-1]
+        p_final = np.poly1d(coeffs_high_to_low)
+        yield f"Coefficients computed successfully for degree {n_target}.\n"
 
-    coeffs_file = os.path.join(OUTPUT_DIR, f"legendre_coefficients_{n}.csv")
-    np.savetxt(coeffs_file, coeffs_low_to_high, delimiter=",")
-    files_created = [os.path.basename(coeffs_file)]
+        # Save coefficients
+        with open(COEFFS_FILE, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["power", "coefficient"])
+            for i, c in enumerate(coeffs_low_to_high):
+                writer.writerow([f"t^{i}", c])
+        yield f"Coefficients saved to {COEFFS_FILE}\n"
 
-    # ------------------------------------------------------------
-    # STEP 2: Companion matrix & roots
-    # ------------------------------------------------------------
-    if n == 0:
-        return {
-            "n": n,
-            "coefficients": coeffs_low_to_high.tolist(),
-            "roots": [],
-            "x_solution": [],
-            "residual": None,
-            "smallest_root": None,
-            "largest_root": None,
-            "files_created": files_created,
-            "summary": "n=0 → Constant polynomial; no roots or matrix."
-        }
+        if n_target == 0:
+            yield f"n=0, skipping matrix, roots, and LU solver.\n"
+            yield "---END---"
+            return
 
-    companion_mat = P_mod.polycompanion(coeffs_low_to_high)
-    companion_file = os.path.join(OUTPUT_DIR, f"companion_matrix_{n}.csv")
-    np.savetxt(companion_file, companion_mat, delimiter=",")
-    files_created.append(os.path.basename(companion_file))
+        # Step 2: Companion matrix
+        yield f"Building {n_target}x{n_target} companion matrix...\n"
+        companion_mat = P_mod.polycompanion(coeffs_low_to_high)
+        np.savetxt(COMPANION_FILE, companion_mat, delimiter=",")
+        yield f"Companion matrix saved to {COMPANION_FILE}\n"
 
-    # Compute stable tridiagonal matrix and roots
-    J_n = build_legendre_tridiagonal(n)
-    start_time = time.time()
-    standard_roots_x = np.linalg.eigh(J_n)[0]
-    elapsed = time.time() - start_time
+        # Step 3: Compute roots via stable eigenvalue method
+        yield f"Calculating roots via eigenvalue decomposition...\n"
+        J_n = np.zeros((n_target, n_target))
+        n_range = np.arange(1.0, n_target)
+        beta = n_range / np.sqrt(4 * n_range**2 - 1)
+        np.fill_diagonal(J_n[1:, :], beta)
+        np.fill_diagonal(J_n[:, 1:], beta)
 
-    shifted_roots = ((standard_roots_x + 1.0) / 2.0)
-    roots_file = os.path.join(OUTPUT_DIR, f"legendre_roots_{n}.csv")
-    np.savetxt(roots_file, shifted_roots, delimiter=",")
-    files_created.append(os.path.basename(roots_file))
+        start_time = time.time()
+        roots_x = np.linalg.eigh(J_n)[0]
+        shifted_roots = (roots_x + 1.0) / 2.0
+        shifted_roots.sort()
+        end_time = time.time()
 
-    # ------------------------------------------------------------
-    # STEP 3: LU Solver on companion matrix
-    # ------------------------------------------------------------
-    A = companion_mat
-    b = np.arange(1, A.shape[0] + 1, dtype=float)
-    x_solution = solve_lu_fast(A, b)
-    residual = float(np.linalg.norm(A @ x_solution - b))
+        yield f"Root computation done in {end_time - start_time:.6f}s\n"
 
-    x_file = os.path.join(OUTPUT_DIR, f"x_solution_lu_{n}.csv")
-    np.savetxt(x_file, x_solution, delimiter=",")
-    files_created.append(os.path.basename(x_file))
+        with open(ROOTS_FILE, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["root"])
+            for r in shifted_roots:
+                writer.writerow([r])
+        yield f"Roots saved to {ROOTS_FILE}\n"
 
-    # ------------------------------------------------------------
-    # STEP 4: Newton–Raphson for smallest and largest roots
-    # ------------------------------------------------------------
-    pn_legendre_coeffs = [0.0] * n + [1.0]
-    pn_legendre_deriv_coeffs = L.legder(pn_legendre_coeffs)
+        # Step 4: LU Solver
+        yield "\n--- Solving Ax=b using LU decomposition ---\n"
+        A = companion_mat
+        n = A.shape[0]
+        b = np.arange(1, n + 1, dtype=float)
 
-    def f(x): return L.legval(2 * x - 1, pn_legendre_coeffs)
-    def f_prime(x): return L.legval(2 * x - 1, pn_legendre_deriv_coeffs) * 2
+        x_solution = solve_lu_fast(A, b)
+        residual = np.linalg.norm(A @ x_solution - b)
+        np.savetxt(X_SOLUTION_FILE, x_solution, delimiter=",")
+        yield f"Solution saved to {X_SOLUTION_FILE}\n"
+        yield f"Residual ||Ax - b|| = {residual:.3e}\n"
 
-    if n == 1:
-        initial_smallest = initial_largest = 0.5
-    else:
-        initial_smallest, initial_largest = 0.0, 1.0
+        # Step 5: Newton–Raphson roots
+        yield "\nStarting Newton-Raphson method for smallest and largest roots...\n"
+        pn_legendre_coeffs = [0.0] * n_target + [1.0]
+        pn_legendre_deriv_coeffs = L.legder(pn_legendre_coeffs)
 
-    smallest_root = newton_raphson(f, f_prime, initial_smallest)
-    largest_root = newton_raphson(f, f_prime, initial_largest)
+        def f(x): return L.legval(2*x - 1, pn_legendre_coeffs)
+        def f_prime(x): return L.legval(2*x - 1, pn_legendre_deriv_coeffs) * 2
 
-    # ------------------------------------------------------------
-    # STEP 5: Build final summary
-    # ------------------------------------------------------------
-    summary = (
-        f"Computed {n}th-order Shifted Legendre Polynomial.\n"
-        f"Found {len(shifted_roots)} roots (computed in {elapsed:.6f}s).\n"
-        f"LU solver residual = {residual:.3e}."
-    )
+        smallest_root = newton_raphson(f, f_prime, 0.0)
+        largest_root = newton_raphson(f, f_prime, 1.0)
 
-    return {
-        "n": n,
-        "coefficients": coeffs_low_to_high.tolist(),
-        "roots": shifted_roots.tolist(),
-        "x_solution": x_solution.tolist(),
-        "residual": residual,
-        "smallest_root": smallest_root,
-        "largest_root": largest_root,
-        "files_created": files_created,
-        "summary": summary
-    }
+        yield "\n--- Newton-Raphson Results ---\n"
+        if smallest_root is not None:
+            yield f"Smallest Root: {smallest_root:.12f}\n"
+        else:
+            yield "Could not find smallest root.\n"
 
+        if largest_root is not None:
+            yield f"Largest Root: {largest_root:.12f}\n"
+        else:
+            yield "Could not find largest root.\n"
 
-# CLI test
-if __name__ == "__main__":
-    res = solve_s2_2({"n": 4})
-    from pprint import pprint
-    pprint(res)
+        yield "Computation complete.\n"
+        yield "---END---"
+
+    except Exception as e:
+        yield f"Error occurred: {str(e)}\n"
+        yield "---END---"

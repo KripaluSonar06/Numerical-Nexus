@@ -2,114 +2,108 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from app.schemas import SolveRequest, SolveResponse
-from app.solutions import s2_1a, s2_1b, s2_2, s3_1, s3_2
+from fastapi.responses import FileResponse, StreamingResponse
+from app.schemas import SolveRequest
 import os
 
 # ===============================================================
-# Initialize the FastAPI app
+# Initialize FastAPI
 # ===============================================================
-app = FastAPI(title="Numerical Methods Assignment 2 & 3 Backend", version="1.0")
+app = FastAPI(
+    title="Numerical Methods Assignment Backend",
+    version="2.0"
+)
 
-# Enable CORS for frontend communication
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # During development; restrict in production
+    allow_origins=["*"],  # Allow all origins (adjust for production)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Output directory for CSVs, PNGs, etc.
+# Directory for generated output files
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-
 
 # ===============================================================
 # Root route
 # ===============================================================
 @app.get("/")
 async def root():
-    """Root route showing available endpoints."""
+    """Show available streaming endpoints and file utilities."""
     return {
-        "message": "Backend is running successfully 🚀",
-        "endpoints": [
-            "/solve/2_1A",
-            "/solve/2_1B",
-            "/solve/2_2",
-            "/solve/3_1",
-            "/solve/3_2",
+        "message": "🚀 Numerical Methods Streaming Backend is Live",
+        "stream_endpoints": [
+            "/stream/2_1A",
+            "/stream/2_1B",
+            "/stream/2_2",
+            "/stream/3_1",
+            "/stream/3_2",
+            "/stream/3_3",
+        ],
+        "file_endpoints": [
             "/files",
             "/files/{filename}",
             "/preview/{filename}",
         ],
     }
 
+# ===============================================================
+# Helper: Unified Stream Wrapper
+# ===============================================================
+def make_stream_response(generator_func, params):
+    """Wrap generator function to stream line-by-line responses."""
+    def event_stream():
+        for line in generator_func(params):
+            yield line
+    return StreamingResponse(event_stream(), media_type="text/plain")
 
 # ===============================================================
-# Assignment 2_1A Endpoint
+# STREAMING ASSIGNMENT ENDPOINTS
 # ===============================================================
-@app.post("/solve/2_1A", response_model=SolveResponse)
-async def solve_2_1a_endpoint(req: SolveRequest):
-    try:
-        result = s2_1a.solve_s2_1a(req.params)
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/stream/2_1A")
+async def stream_2_1a(req: SolveRequest):
+    from app.solutions import s2_1a
+    return make_stream_response(s2_1a.stream_s2_1a, req.params)
 
 
-# ===============================================================
-# Assignment 2_1B Endpoint
-# ===============================================================
-@app.post("/solve/2_1B", response_model=SolveResponse)
-async def solve_2_1b_endpoint(req: SolveRequest):
-    try:
-        result = s2_1b.solve_s2_1b(req.params)
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/stream/2_1B")
+async def stream_2_1b(req: SolveRequest):
+    from app.solutions import s2_1b
+    return make_stream_response(s2_1b.stream_s2_1b, req.params)
 
 
-# ===============================================================
-# Assignment 2_2 Endpoint
-# ===============================================================
-@app.post("/solve/2_2", response_model=SolveResponse)
-async def solve_2_2_endpoint(req: SolveRequest):
-    try:
-        result = s2_2.solve_s2_2(req.params)
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/stream/2_2")
+async def stream_2_2(req: SolveRequest):
+    from app.solutions import s2_2
+    return make_stream_response(s2_2.stream_s2_2, req.params)
 
 
-# ===============================================================
-# Assignment 3_1 Endpoint
-# ===============================================================
-@app.post("/solve/3_1", response_model=SolveResponse)
-async def solve_3_1_endpoint(req: SolveRequest):
-    try:
-        result = s3_1.solve_s3_1(req.params)
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/stream/3_1")
+async def stream_3_1(req: SolveRequest):
+    from app.solutions import s3_1
+    return make_stream_response(s3_1.stream_s3_1, req.params)
 
 
-# ===============================================================
-# Assignment 3_2 Endpoint
-# ===============================================================
-@app.post("/solve/3_2", response_model=SolveResponse)
-async def solve_3_2_endpoint(req: SolveRequest):
-    try:
-        result = s3_2.solve_s3_2(req.params)
-        return {"result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/stream/3_2")
+async def stream_3_2(req: SolveRequest):
+    from app.solutions import s3_2
+    return make_stream_response(s3_2.stream_s3_2, req.params)
+
+
+@app.post("/stream/3_3")
+async def stream_3_3(req: SolveRequest):
+    from app.solutions import s3_3
+    return make_stream_response(s3_3.stream_s3_3, req.params)
 
 
 # ===============================================================
-# File Listing Endpoint
+# FILE MANAGEMENT ROUTES
 # ===============================================================
+
 @app.get("/files")
 async def list_files():
     """List all CSV and PNG files in the output folder."""
@@ -121,17 +115,14 @@ async def list_files():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ===============================================================
-# File Download / View Endpoint
-# ===============================================================
 @app.get("/files/{filename}")
 async def get_file(filename: str):
-    """Serve any CSV or PNG file from the output directory."""
+    """Serve CSV or PNG file from the output directory."""
     file_path = os.path.join(OUTPUT_DIR, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Determine MIME type
+    # MIME type detection
     if filename.lower().endswith(".csv"):
         media_type = "text/csv"
     elif filename.lower().endswith(".png"):
@@ -142,18 +133,14 @@ async def get_file(filename: str):
     return FileResponse(file_path, media_type=media_type, filename=filename)
 
 
-# ===============================================================
-# File Preview Endpoint (for quick frontend display)
-# ===============================================================
 @app.get("/preview/{filename}")
 async def preview_file(filename: str, lines: int = 10):
     """Preview the first few lines of a CSV file."""
     file_path = os.path.join(OUTPUT_DIR, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
-
     if not filename.lower().endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Preview supported only for CSV files")
+        raise HTTPException(status_code=400, detail="Preview only supports CSV files")
 
     try:
         with open(file_path, "r") as f:
