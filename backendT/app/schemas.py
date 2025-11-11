@@ -7,6 +7,4 @@ class SolveRequest(BaseModel):
     params: Dict[str, Any]
 
 class SolveResponse(BaseModel):
-    status: str
-    result: Optional[Any]
-    error: Optional[str] = None
+    result: Dict[str, Any]

@@ -54,7 +54,7 @@ async def root():
 async def solve_2_1a_endpoint(req: SolveRequest):
     try:
         result = s2_1a.solve_s2_1a(req.params)
-        return result
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -66,7 +66,7 @@ async def solve_2_1a_endpoint(req: SolveRequest):
 async def solve_2_1b_endpoint(req: SolveRequest):
     try:
         result = s2_1b.solve_s2_1b(req.params)
-        return result
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -78,7 +78,7 @@ async def solve_2_1b_endpoint(req: SolveRequest):
 async def solve_2_2_endpoint(req: SolveRequest):
     try:
         result = s2_2.solve_s2_2(req.params)
-        return result
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -90,7 +90,7 @@ async def solve_2_2_endpoint(req: SolveRequest):
 async def solve_3_1_endpoint(req: SolveRequest):
     try:
         result = s3_1.solve_s3_1(req.params)
-        return result
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -102,7 +102,7 @@ async def solve_3_1_endpoint(req: SolveRequest):
 async def solve_3_2_endpoint(req: SolveRequest):
     try:
         result = s3_2.solve_s3_2(req.params)
-        return result
+        return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
