@@ -85,7 +85,7 @@ def newton_raphson(f, f_prime, x0, tol=1e-12, max_iter=100):
 # Main Streaming Function
 # ============================================================
 
-def stream_s3_1(params):
+def stream_s2_2(params):
     """
     Stream the computation of Legendre polynomial roots,
     LU decomposition, and Newton-Raphson results.

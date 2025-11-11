@@ -73,7 +73,7 @@ def roots_weights(n):
 # Streaming solver
 # ============================================================
 
-def stream_s3_2(params):
+def stream_s3_1(params):
     """
     Streams Gauss-Legendre roots, weights, and A/B matrix computation.
     Example input:

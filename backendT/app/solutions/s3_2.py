@@ -70,7 +70,7 @@ def coeff_1st_diff(x): return (1 + 2 * math.log(max(x, 1e-12)))
 # Main streamed computation
 # ------------------------------------------------------
 
-def stream_s3_3(params):
+def stream_s3_2(params):
     """
     Stream solution of the PDE using collocation and compare
     numerical vs analytical temperature profiles.
