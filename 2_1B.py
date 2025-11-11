@@ -41,14 +41,14 @@ while True:
         for j in range(max_curr):
             print(f"{max_curr_end + j - max_curr + 1}")
         break
-pre_start = [12,20,110,510,131052,12751220,10000095,2162049150,124324220,1,920067411130599,43494229746440272890, 12100324200007455010742303399999999999999999990,4201420328711160916072939999999999999999999999999999999999999996]
-if(limit <= 14):
-    start = pre_start[limit - 1]
-    print(f"Pre-Computed: {limit} consecutive Harshad numbers are -")
-    for i in range(limit):
-        print(f"{start + i}")
-if limit == 10:
-    print(f"Pre-Computed: Second Occurence of 10 consecutive Harshad numbers are - ")
-    start = 602102100620
-    for i in range(limit):
-        print(f"{start + i}")
+# pre_start = [12,20,110,510,131052,12751220,10000095,2162049150,124324220,1,920067411130599,43494229746440272890, 12100324200007455010742303399999999999999999990,4201420328711160916072939999999999999999999999999999999999999996]
+# if(limit <= 14):
+#     start = pre_start[limit - 1]
+#     print(f"Pre-Computed: {limit} consecutive Harshad numbers are -")
+#     for i in range(limit):
+#         print(f"{start + i}")
+# if limit == 10:
+#     print(f"Pre-Computed: Second Occurence of 10 consecutive Harshad numbers are - ")
+#     start = 602102100620
+#     for i in range(limit):
+#         print(f"{start + i}")
