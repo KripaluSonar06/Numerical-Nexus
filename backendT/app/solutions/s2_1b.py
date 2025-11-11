@@ -1,5 +1,4 @@
 # app/solutions/s2_1b_stream.py
-import time
 
 def Check_Harshad(f: int) -> bool:
     """Check if a number is Harshad."""
@@ -21,15 +20,14 @@ def stream_s2_1b(params: dict):
     }
     """
     try:
-        start = int(params.get("start", 1))
-        end = int(params.get("end", 1000))
-        limit = int(params.get("limit", 5))
-        update = int(params.get("update", 100))
+        start = int(params.get("start", "1"))
+        end = int(params.get("end", "1000"))
+        limit = int(params.get("limit", "5"))
+        update = int(params.get("update", "100"))
 
         yield f"Searching for {limit} consecutive Harshad numbers in range [{start}, {end}]...\n"
 
         i = start
-        start = i
         curr = 0
 
         # initial update message
@@ -67,4 +65,4 @@ def stream_s2_1b(params: dict):
 
     except Exception as e:
         yield f"Error: {str(e)}\n"
-        yield "###END###"
+        yield "---END---"

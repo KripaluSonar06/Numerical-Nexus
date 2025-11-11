@@ -1,4 +1,5 @@
 # app/solutions/s2_1a.py
+from decimal import Decimal
 
 def factorial(i):
     f = 1

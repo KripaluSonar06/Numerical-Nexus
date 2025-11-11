@@ -84,8 +84,8 @@ while True:
       description: 'Find n consecutive Harshad numbers within a range',
       question: 'Find n consecutive Harshad numbers in a given range with progress updates.',
       inputs: [
-        { id: 'i', label: 'From which number you want to start?', type: 'number', placeholder: '1' },
-        { id: 'f', label: 'At which number you want to end?', type: 'number', placeholder: '1000' },
+        { id: 'start', label: 'From which number you want to start?', type: 'number', placeholder: '1' },
+        { id: 'end', label: 'At which number you want to end?', type: 'number', placeholder: '1000' },
         { id: 'limit', label: 'How many consecutive Harshad numbers?', type: 'number', placeholder: '3' },
         { id: 'update', label: 'How frequent you want to be updated?', type: 'number', placeholder: '10' }
       ],
@@ -554,8 +554,8 @@ if __name__ == "__main__":
       description: 'Roots, weights, and orthogonal collocation matrices',
       question: `Determine the roots and weights of the Gauss-Legendre Polynomial using eigenvalues and norms of eigenvectors up to n. Plot weights against roots. Determine A & B matrices for orthogonal collocation for m.`,
       inputs: [
-        { id: 'n', label: 'Order n', type: 'number', placeholder: '5' },
-        { id: 'm', label: 'Collocation parameter m', type: 'number', placeholder: '3' }
+        { id: 'n_roots', label: 'n for roots-weights', type: 'number', placeholder: '5' },
+        { id: 'n_matrices', label: 'n for A, B matrices', type: 'number', placeholder: '3' }
       ],
       hasTerminal: true,
       hasCSV: true,
@@ -692,7 +692,10 @@ os.startfile("B_matrix.csv")`
       description: 'Solve ODE and compare with analytical solution',
       question: 'Solve the ODE using Gauss-Legendre method with n points and compare with analytical solution.',
       inputs: [
-        { id: 'n', label: 'Number of Points (n)', type: 'number', placeholder: '5' }
+        { id: 'n', label: 'Value of n', type: 'number', placeholder: '5' },
+        { id: 'To', label: 'Number of Points (n)', type: 'number', placeholder: '273' },
+        { id: 'Ts', label: 'Number of Points (n)', type: 'number', placeholder: '373' },
+        { id: 'alpha', label: 'Number of Points (n)', type: 'number', placeholder: '1e-5' }
       ],
       hasTerminal: true,
       hasPDF: true,

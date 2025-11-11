@@ -160,7 +160,7 @@ def stream_s3_2(params):
         plt.plot(X_vals, T_analytical_vec(X_vals, tau0), "r--", lw=2, label="Analytical (erf)")
         plt.xlabel("Position X (m)")
         plt.ylabel("Temperature T (K)")
-        plt.title(f"Temperature Profiles (τ = {tau0:.2f} s, n={n})")
+        plt.title(f"Temperature Profiles (Tau = {tau0:.2f} s, n={n})")
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.legend()
         plot_file = os.path.join(output_dir, f"temperature_profiles_n{n}.png")
@@ -171,7 +171,7 @@ def stream_s3_2(params):
         # ------------------------------------------------------
         # Error matrix computation
         # ------------------------------------------------------
-        yield "Computing temperature error matrix over x and τ range...\n"
+        yield "Computing temperature error matrix over x and Tau range...\n"
         smallest_num = math.ulp(0.0)
         num_X = 101
         num_tau = 101
@@ -187,13 +187,13 @@ def stream_s3_2(params):
             if i % 20 == 0:
                 yield f"  • Progress: {i}/{num_X} spatial points done\n"
 
-        header_row = "X/τ," + ",".join([f"{tau:.6e}" for tau in tau_vals_err])
+        header_row = "X/Tau," + ",".join([f"{tau:.6e}" for tau in tau_vals_err])
         data_with_X = np.column_stack((X_vals_err, error_matrix))
         csv_filename = os.path.join(output_dir, f"temperature_error_matrix_n{n}.csv")
         np.savetxt(csv_filename, data_with_X, delimiter=",", header=header_row, comments="", fmt="%.6e")
 
         yield f"Saved temperature error matrix to {csv_filename}\n"
-        yield f"Computation complete (n={n}, L={L}, α={alpha})\n"
+        yield f"Computation completed (n = {n}, L = {L}, alpha = {alpha})\n"
         yield "END"
 
     except Exception as e:
