@@ -35,9 +35,7 @@ def stream_s2_1a(params):
     first = start
 
     while True:
-        yield f"\nChecking {start}! = {f} ...\n"
         is_harshad = Check_Harshad(f)
-
         if is_harshad:
             yield f"{start}! is a Harshad number.\n"
             start += 1
@@ -47,10 +45,6 @@ def stream_s2_1a(params):
                 return
             f *= start
         else:
-            yield f"{start}! is NOT a Harshad number!!!\n"
-            start += 1
-            if start > end:
-                yield f"\nSearch completed up to {end}!.\n"
-                yield "---END---"
-                return
-            f *= start
+            yield f"{start}! = {f}\n{start}! is NOT a Harshad number!!!\n"
+            yield "---END---"
+            return
