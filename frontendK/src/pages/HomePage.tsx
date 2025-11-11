@@ -5,21 +5,43 @@ import { useNavigate } from "react-router-dom";
 import MathGlobe from "@/components/MathGlobe";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import LiquidEther from "@/components/LiqEther";
+import GradientText from "@/components/GradientText";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   const teamMembers = [
-    { name: "xyz", roll: "001" },
-    { name: "yzx", roll: "002" },
-    { name: "zxy", roll: "003" },
+    { name: "Malhar", roll: "ES24BTECH11018" },
+    { name: "Kripalu", roll: "ES24BTECH11021" },
+    { name: "Taleem", roll: "ES24BTECH11021" },
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* --- Background Gradient --- */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-purple-950/20 to-background" />
-
+      <div className="absolute inset-0 -z-10">
+  <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <LiquidEther
+      colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
+      mouseForce={20}
+      cursorSize={70}
+      isViscous={false}
+      viscous={30}
+      iterationsViscous={32}
+      iterationsPoisson={32}
+      resolution={0.5}
+      isBounce={false}
+      autoDemo={true}
+      autoSpeed={0.5}
+      autoIntensity={2.2}
+      takeoverDuration={0.25}
+      autoResumeDelay={3000}
+      autoRampDuration={0.6}
+    />
+  </div>
+</div>
       {/* --- 3D Globe --- */}
       <div className="absolute inset-0 pointer-events-none">
         <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
@@ -43,7 +65,14 @@ const HomePage: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
           >
+          <GradientText
+            colors={["rgba(186, 40, 172, 1)", "#4079ff", "#40ffaa", "#4079ff", "#cb25a4ff"]}
+            animationSpeed={3}
+            showBorder={false}
+            className="custom-class"
+          >
             Numerical Methods Assignment
+          </GradientText>
           </motion.h1>
           {/*<motion.p
             className="text-2xl md:text-3xl text-accent font-light"

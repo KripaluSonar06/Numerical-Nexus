@@ -966,9 +966,9 @@ plt.show()`
 // =============================================
 const handleCompute = async () => {
   try {
-    setTerminalLines([{ text: "Connecting to backend...", type: "info" }]);
+    setTerminalLines([{ text: "🔌 Connecting to backend stream...", type: "info" }]);
 
-    // Determine correct backend endpoint
+    // Map question IDs to backend endpoints
     let endpoint = "";
     switch (questionId) {
       case "2-Q1A":
@@ -986,6 +986,9 @@ const handleCompute = async () => {
       case "3-Q2":
         endpoint = "3_2";
         break;
+      case "3-Q3":
+        endpoint = "3_3";
+        break;
       default:
         toast({
           title: "Invalid Question",
@@ -995,51 +998,68 @@ const handleCompute = async () => {
         return;
     }
 
-    // Construct full backend URL
-    const API_BASE = "http://127.0.0.1:8000"; // Change if hosted differently
-    const url = `${API_BASE}/solve/${endpoint}`;
+    const API_BASE = "http://127.0.0.1:8000";
+    const url = `${API_BASE}/stream/${endpoint}`;
 
-    // POST data to backend
+    // Fetch with streaming reader
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ params: inputs }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Backend Error: ${response.status}`);
+    if (!response.ok || !response.body) {
+      throw new Error(`Backend error: ${response.status}`);
     }
 
-    // Parse JSON response
-    const data = await response.json();
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
 
-    // Handle backend response structure { result: ... }
-    const backendResult =
-      typeof data.result === "string"
-        ? data.result
-        : JSON.stringify(data.result, null, 2);
+    let outputBuffer = "";
+    let finalLines: { text: string; type: string }[] = [];
 
-    // Update terminal lines dynamically
-    setTerminalLines([
-      { text: "✅ Connected to backend successfully!", type: "success" },
-      { text: `POST ${url}`, type: "info" },
-      { text: "Running computation...", type: "info" },
-      { text: "Processing complete.", type: "success" },
+    setTerminalLines((prev) => [
+      ...prev,
+      { text: `Connected to ${url}`, type: "success" },
+      { text: "📡 Receiving stream...", type: "info" },
     ]);
 
-    // Set final answer from backend output
-    setFinalAnswer(backendResult);
+    // Read chunks as they arrive
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      outputBuffer += decoder.decode(value, { stream: true });
+
+      const lines = outputBuffer.split(/\r?\n/);
+      outputBuffer = lines.pop() || ""; // keep partial line
+
+      for (const line of lines) {
+        if (line.trim() !== "") {
+          setTerminalLines((prev) => [...prev, { text: line, type: "output" }]);
+          finalLines.push({ text: line, type: "output" });
+        }
+      }
+    }
+
+    if (outputBuffer.trim() !== "") {
+      setTerminalLines((prev) => [...prev, { text: outputBuffer, type: "output" }]);
+      finalLines.push({ text: outputBuffer, type: "output" });
+    }
+
+    const lastLine = finalLines.length > 0 ? finalLines[finalLines.length - 1].text : "No output received.";
+    setFinalAnswer(lastLine);
     setShowSolution(true);
     setActiveTab("solution");
 
     toast({
       title: "Computation Complete ✅",
-      description: "Backend returned results successfully.",
+      description: "Streaming completed successfully.",
     });
   } catch (error: any) {
-    console.error("Error during backend computation:", error);
+    console.error("Streaming error:", error);
     setTerminalLines([
-      { text: "❌ Error connecting to backend.", type: "error" },
+      { text: "❌ Streaming error occurred.", type: "error" },
       { text: error.message, type: "error" },
     ]);
 
@@ -1050,6 +1070,7 @@ const handleCompute = async () => {
     });
   }
 };
+
 
 
   const handleMarkComplete = () => {
