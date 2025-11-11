@@ -3,8 +3,10 @@ import math
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from numpy.polynomial.legendre import leggauss
+from scipy.interpolate import interp1d
+from scipy.interpolate import BarycentricInterpolator
+from scipy.interpolate import lagrange
 from scipy.special import erf
-import os
 
 # ------------------------------------------------------
 # Utility function for safe user input with default value
@@ -81,16 +83,7 @@ def get_y(y, n, x, A, B):
     y_inner = np.linalg.solve(C, D)
     for i in range(n):
         y[i + 1] = y_inner[i]
-# ------------------------------------------------------
-def find_d(y, x, n):
-    Q = np.zeros((n+2, n+2))
-    for i in range(n+2):
-        for j in range(n+2):
-            Q[i][j] = x[i] ** j
-    Y = y
-    d = np.linalg.solve(Q, Y)
-    return d
-        
+
 # ------------------------------------------------------
 # Setup collocation
 n = int(input("Enter n value : "))
@@ -106,32 +99,35 @@ else:
     B = D @ D
 
 get_y(y, n, x, A, B)
-# ------------------------------------------------------
-# Getting y polynomial
-d = find_d(y, x, n)
 
-def f_eta(eta, d, n):
-    z = math.exp(-eta)
-    y = 0
-    for i in range(n + 2):
-        y += (z ** i) * d[i]
-    return y
+# ------------------------------------------------------
+# Transform z → η
+z_nodes = x
+f_nodes = y
+eta_nodes = -np.log(np.maximum(z_nodes, 1e-6))
+eta_nodes = np.clip(eta_nodes, 0, 6)
+# f_eta = interp1d(eta_nodes, f_nodes, kind='nearest', bounds_error=False, fill_value=(f_nodes[0], f_nodes[-1]))
+f_eta_poly = lagrange(eta_nodes, f_nodes)
+def f_eta(eta):
+    return f_eta_poly(eta)
+# f_eta = BarycentricInterpolator(eta_nodes, f_nodes)
 
 # ------------------------------------------------------
 # Physical parameters (with defaults)
 To = get_input("Enter T₀", 273)
 Ts = get_input("Enter Tₛ", 373)
 alpha = get_input("Enter alpha", 1e-5)
-L = get_input("Enter L", 5)
+L = get_input("Enter L", 1)
 
 # ------------------------------------------------------
 # Temperature functions
-def T_X_tau(X, tao):
-    eta = X / (2 * np.sqrt(alpha * tao))
-    return To + (Ts - To) * f_eta(eta, d, n)
+def T_X_tau(X, tau):
+    eta = X / (2 * np.sqrt(alpha * tau))
+    eta = np.clip(eta, eta_nodes.min(), eta_nodes.max())
+    return To + (Ts - To) * f_eta(eta)
 
-def T_analytical(X, tao):
-    return To + (Ts - To) * erf(X / (2 * np.sqrt(alpha * tao)))
+def T_analytical(X, tau):
+    return To + (Ts - To) * erf(X / (2 * np.sqrt(alpha * tau)))
 
 T_X_tau_vec = np.vectorize(T_X_tau)
 T_analytical_vec = np.vectorize(T_analytical)
@@ -160,45 +156,11 @@ ax_tau = plt.axes([0.2, 0.1, 0.6, 0.03])
 slider_tau = Slider(ax_tau, 'τ (s)', 0.5, 10000, valinit=tau0, valstep=0.5)
 
 def update(val):
-    tao = slider_tau.val
-    line1.set_ydata(T_X_tau_vec(X_vals, tao))
-    line2.set_ydata(T_analytical_vec(X_vals, tao))
-    ax.set_title(f'Temperature profiles at τ (n = {n}) = {tao:.2f} s')
+    tau = slider_tau.val
+    line1.set_ydata(T_X_tau_vec(X_vals, tau))
+    line2.set_ydata(T_analytical_vec(X_vals, tau))
+    ax.set_title(f'Temperature profiles at τ (n = {n}) = {tau:.2f} s')
     fig.canvas.draw_idle()
 
 slider_tau.on_changed(update)
 plt.show()
-# -------------------------------------------------------
-# Error matrix generation and CSV export
-# ------------------------------------------------------
-
-# Define a set of spatial positions and time points to evaluate
-smallest_num = math.ulp(0.0)
-num_X = 101      # number of spatial samples
-num_tao = 101     # number of time samples
-
-X_vals_err = np.linspace(smallest_num, L + smallest_num, num_X)
-tao_vals_err = np.linspace(smallest_num, 10000+smallest_num, num_tao)
-
-# Initialize error matrix
-error_matrix = np.zeros((num_X, num_tao))
-
-# Compute errors
-for i, X in enumerate(X_vals_err):
-    for j, tao in enumerate(tao_vals_err):
-        T_ana = T_analytical(X, tao)
-        T_col = T_X_tau(X, tao)
-        error_matrix[i, j] = T_ana - T_col
-
-# Combine X and τ labels for clarity
-# (Each row corresponds to an X position)
-header_row = "X/Tau," + ",".join([f"{tao:.6e}" for tao in tao_vals_err])
-data_with_X = np.column_stack((X_vals_err, error_matrix))
-
-# Save to CSV
-csv_filename = "temperature_error_matrix.csv"
-np.savetxt(csv_filename, data_with_X, delimiter=",",header=header_row, comments='', fmt="%.6e")
-os.startfile(csv_filename)
-
-print(f"\n✅ Error matrix saved successfully as '{csv_filename}'")
-print(f"Shape of matrix: {error_matrix.shape}")

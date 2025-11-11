@@ -1,23 +1,15 @@
 # app/solutions/s3_2.py
-
 import numpy as np
 import math
 import matplotlib.pyplot as plt
 from numpy.polynomial.legendre import leggauss
-from scipy.interpolate import interp1d
 from scipy.special import erf
 import os
-from typing import Dict, Any
 
-# ===============================================================
-# Ensure output directory
-# ===============================================================
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# ===============================================================
-# Numerical helper functions
-# ===============================================================
+# ===========================================================
+# Utility and math helpers
+# ===========================================================
 
 def find_A(n, x):
     Q = np.zeros((n + 2, n + 2))
@@ -70,16 +62,12 @@ def gl_roots_with_endpoints(n):
     return np.concatenate(([0.0], 0.5 * (xi + 1.0), [1.0]))
 
 
-# ===============================================================
-# PDE / collocation logic
-# ===============================================================
+# ===========================================================
+# Core collocation solver
+# ===========================================================
 
-def coeff_2nd_diff(x):
-    return x
-
-
-def coeff_1st_diff(x):
-    return 1 + 2 * math.log(max(x, 1e-12))
+coeff_2nd_diff = lambda x: x
+coeff_1st_diff = lambda x: (1 + 2 * math.log(max(x, 1e-12)))
 
 
 def get_y(y, n, x, A, B):
@@ -89,7 +77,6 @@ def get_y(y, n, x, A, B):
     for i in range(1, n + 1):
         for j in range(n + 2):
             coeffs[i][j] = coeff_2nd_diff(x[i]) * B[i][j] + coeff_1st_diff(x[i]) * A[i][j]
-
     C = np.zeros((n, n))
     D = np.zeros(n)
     for i in range(n):
@@ -97,40 +84,50 @@ def get_y(y, n, x, A, B):
             C[i][j] = coeffs[i + 1][j + 1]
     for i in range(n):
         D[i] = - (y[0] * coeffs[i + 1][0] + y[n + 1] * coeffs[i + 1][n + 1])
-
     y_inner = np.linalg.solve(C, D)
     for i in range(n):
         y[i + 1] = y_inner[i]
 
 
-# ===============================================================
-# Main function for backend
-# ===============================================================
+def find_d(y, x, n):
+    Q = np.zeros((n + 2, n + 2))
+    for i in range(n + 2):
+        for j in range(n + 2):
+            Q[i][j] = x[i] ** j
+    Y = y
+    return np.linalg.solve(Q, Y)
 
-def solve_s3_2(params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Solve temperature distribution via Gauss–Legendre collocation.
 
-    Args:
-        params: {
-            "n": int - number of nodes
-            "To": float - initial temperature (default 273)
-            "Ts": float - surface temperature (default 373)
-            "alpha": float - thermal diffusivity (default 1e-5)
-            "L": float - domain length (default 1)
-            "tau": float - time (default 0.5)
-        }
+def f_eta(eta, d, n):
+    z = np.exp(-eta)
+    return np.sum([(z ** i) * d[i] for i in range(n + 2)])
+
+
+# ===========================================================
+# Main solver (backend entry point)
+# ===========================================================
+
+def solve_s3_2(params: dict):
     """
+    Compute temperature distribution using collocation method
+    and compare with analytical solution.
+    Saves both temperature plot and error matrix CSV.
+    """
+
+    # -------------------------------------------------------
+    # Parameters
     n = int(params.get("n", 6))
     To = float(params.get("To", 273))
     Ts = float(params.get("Ts", 373))
     alpha = float(params.get("alpha", 1e-5))
-    L = float(params.get("L", 1))
+    L = float(params.get("L", 5))
     tau = float(params.get("tau", 0.5))
 
-    # ------------------------------------------------------------
-    # STEP 1: Collocation solution
-    # ------------------------------------------------------------
+    OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "output")
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # -------------------------------------------------------
+    # Setup collocation
     y = np.zeros(n + 2)
     x = gl_roots_with_endpoints(n)
 
@@ -139,86 +136,83 @@ def solve_s3_2(params: Dict[str, Any]) -> Dict[str, Any]:
         B = find_B(n, x)
     else:
         D = diff_matrix(x)
-        A, B = D, D @ D
+        A = D
+        B = D @ D
 
     get_y(y, n, x, A, B)
+    d = find_d(y, x, n)
 
-    # Transform z → η
-    z_nodes = x
-    f_nodes = y
-    eta_nodes = -np.log(np.maximum(z_nodes, 1e-100))
-    f_eta = interp1d(
-        eta_nodes, f_nodes, kind="linear", bounds_error=False, fill_value=(f_nodes[0], f_nodes[-1])
-    )
+    # -------------------------------------------------------
+    # Define temperature functions
+    def T_X_tau(X, tao):
+        eta = X / (2 * np.sqrt(alpha * tao))
+        return To + (Ts - To) * f_eta(eta, d, n)
 
-    # ------------------------------------------------------------
-    # STEP 2: Temperature profiles
-    # ------------------------------------------------------------
-    def T_X_tau(X, tau):
-        eta = X / (2 * np.sqrt(alpha * tau))
-        return To + (Ts - To) * f_eta(eta)
+    def T_analytical(X, tao):
+        return To + (Ts - To) * erf(X / (2 * np.sqrt(alpha * tao)))
 
-    def T_analytical(X, tau):
-        return To + (Ts - To) * erf(X / (2 * np.sqrt(alpha * tau)))
+    T_X_tau_vec = np.vectorize(T_X_tau)
+    T_analytical_vec = np.vectorize(T_analytical)
 
+    # -------------------------------------------------------
+    # Generate temperature plot
     X_vals = np.linspace(0, L, int(100 * L))
-    T_num = T_X_tau(X_vals, tau)
-    T_exact = T_analytical(X_vals, tau)
-
-    # ------------------------------------------------------------
-    # STEP 3: Plot both curves
-    # ------------------------------------------------------------
     fig, ax = plt.subplots(figsize=(8, 6))
-    ax.plot(X_vals, T_num, "b-", lw=2, label="Collocation")
-    ax.plot(X_vals, T_exact, "r--", lw=2, label="Analytical (erf)")
-    ax.set_xlabel("Position X (m)")
-    ax.set_ylabel("Temperature T (K)")
-    ax.set_title(f"T(x) profiles at τ={tau:.2f}s (n={n})")
-    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.plot(X_vals, T_X_tau_vec(X_vals, tau), 'b-', lw=2, label='Gauss-Legendre (collocation)')
+    ax.plot(X_vals, T_analytical_vec(X_vals, tau), 'r--', lw=2, label='Analytical (erf)')
+    ax.set_xlabel('Position X (m)')
+    ax.set_ylabel('Temperature T (K)')
+    ax.set_title(f'Temperature profiles (n={n}, τ={tau:.2f}s)')
+    ax.grid(True, linestyle='--', alpha=0.6)
     ax.legend()
 
-    plot_file = os.path.join(OUTPUT_DIR, f"T_profile_n_{n}_tau_{int(tau)}.png")
-    plt.savefig(plot_file, dpi=150, bbox_inches="tight")
-    plt.close()
+    plot_filename = f"T_profile_n_{n}_tau_{tau:.2f}.png"
+    plot_path = os.path.join(OUTPUT_DIR, plot_filename)
+    plt.savefig(plot_path)
+    plt.close(fig)
 
-    # ------------------------------------------------------------
-    # STEP 4: Optionally save numeric data
-    # ------------------------------------------------------------
-    data_file = os.path.join(OUTPUT_DIR, f"T_data_n_{n}_tau_{int(tau)}.csv")
-    np.savetxt(
-        data_file,
-        np.column_stack([X_vals, T_num, T_exact]),
-        delimiter=",",
-        header="X, T_numerical, T_analytical",
-        comments="",
-        fmt="%.6f",
-    )
+    # -------------------------------------------------------
+    # Error matrix calculation
+    smallest_num = math.ulp(0.0)
+    num_X = 101
+    num_tau = 101
+    X_vals_err = np.linspace(smallest_num, L + smallest_num, num_X)
+    tau_vals_err = np.linspace(smallest_num, 10000 + smallest_num, num_tau)
 
-    # ------------------------------------------------------------
-    # STEP 5: Return summary for backend/frontend
-    # ------------------------------------------------------------
-    summary = (
-        f"Computed temperature profiles for n={n}, τ={tau}. "
-        f"Saved plot and data in output folder."
-    )
+    error_matrix = np.zeros((num_X, num_tau))
+    for i, X in enumerate(X_vals_err):
+        for j, tao in enumerate(tau_vals_err):
+            error_matrix[i, j] = T_analytical(X, tao) - T_X_tau(X, tao)
 
-    return {
+    header_row = "X/Tau," + ",".join([f"{tao:.6e}" for tao in tau_vals_err])
+    data_with_X = np.column_stack((X_vals_err, error_matrix))
+
+    csv_filename = f"T_error_matrix_n_{n}_tau_{tau:.2f}.csv"
+    csv_path = os.path.join(OUTPUT_DIR, csv_filename)
+    np.savetxt(csv_path, data_with_X, delimiter=",", header=header_row, comments='', fmt="%.6e")
+
+    # -------------------------------------------------------
+    # Prepare result for backend
+    result = {
         "n": n,
         "tau": tau,
         "To": To,
         "Ts": Ts,
         "alpha": alpha,
         "L": L,
-        "files_created": [
-            os.path.basename(plot_file),
-            os.path.basename(data_file),
-        ],
-        "summary": summary,
+        "files_created": [plot_filename, csv_filename],
+        "summary": (
+            f"Temperature profile computed for n={n}, τ={tau}. "
+            f"Results saved as '{plot_filename}' and '{csv_filename}'."
+        )
     }
 
+    return result
 
-# CLI test
+
+# ===========================================================
+# Local test
+# ===========================================================
 if __name__ == "__main__":
-    res = solve_s3_2({"n": 6, "tau": 1})
-    from pprint import pprint
-    pprint(res)
+    params = {"n": 6, "To": 273, "Ts": 373, "alpha": 1e-5, "L": 5, "tau": 0.5}
+    print(solve_s3_2(params))
