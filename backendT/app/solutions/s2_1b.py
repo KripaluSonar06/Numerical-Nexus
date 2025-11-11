@@ -29,14 +29,11 @@ def stream_s2_1b(params: dict):
         yield f"Searching for {limit} consecutive Harshad numbers in range [{start}, {end}]...\n"
 
         i = start
-        i1 = i
+        start = i
         curr = 0
-        max_curr = 0
-        max_curr_end = 0
 
         # initial update message
         yield f"Checking between {i} and {min(i + update - 1, end)} ...\n"
-        time.sleep(0.2)
 
         while True:
             if (i - start) % update == 0:
@@ -44,13 +41,10 @@ def stream_s2_1b(params: dict):
 
             if Check_Harshad(i):
                 curr += 1
-                if curr > max_curr:
-                    max_curr = curr
-                    max_curr_end = i
-                yield f"{i} is a Harshad number (current streak = {curr})\n"
+                # yield f"{i} is a Harshad number (current streak = {curr})\n"
             else:
-                if curr > 0:
-                    yield f"{i} breaks the streak (was {curr} long)\n"
+                # if curr > 0:
+                #     yield f"{i} breaks the streak (was {curr} long)\n"
                 curr = 0
 
             if curr == limit:
@@ -66,15 +60,10 @@ def stream_s2_1b(params: dict):
 
             i += 1
             if i > end:
-                yield f"\nDid not find exactly {limit} consecutive Harshad numbers in range [{i1}, {end}].\n"
-                yield f"Longest streak was {max_curr} numbers ending at {max_curr_end}.\n"
-                yield "Numbers of longest streak:\n"
-                for j in range(max_curr):
-                    yield f"{max_curr_end + j - max_curr + 1}\n"
+                yield f"\nDid not find exactly {limit} consecutive Harshad numbers in range [{start}, {end}].\n"
                 yield "---END---"
                 return
 
-            time.sleep(0.02)
 
     except Exception as e:
         yield f"Error: {str(e)}\n"

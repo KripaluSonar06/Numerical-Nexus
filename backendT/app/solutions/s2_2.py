@@ -16,7 +16,7 @@ def build_legendre_tridiagonal(n):
     J = np.zeros((n, n))
     np.fill_diagonal(J[1:, :], beta)
     np.fill_diagonal(J[:, 1:], beta)
-    yield f"✅ Tridiagonal matrix constructed successfully.\n"
+    yield f"Tridiagonal matrix constructed successfully.\n"
     return J
 
 

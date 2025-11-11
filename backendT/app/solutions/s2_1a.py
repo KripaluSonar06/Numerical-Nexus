@@ -68,7 +68,7 @@ def stream_s2_1a(params):
             yield f"{i}! is NOT a Harshad number!!!\n"
 
             if not cont:
-                yield f"⏸ Awaiting user input: Continue to next factorial? [Y/N]\n"
+                yield f"Awaiting user input: Continue to next factorial? [Y/N]\n"
                 STATE[session] = {"i": i, "f": f, "done": False}
                 yield "---WAIT---"
                 return
@@ -76,5 +76,3 @@ def stream_s2_1a(params):
                 yield f"Continuing automatically...\n"
                 i += 1
                 f *= i
-
-        time.sleep(0.3)
