@@ -116,7 +116,7 @@ def stream_s3_1(params):
         plt.title(f"Gauss-Legendre Weights vs Roots (n = {n_roots})")
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.legend()
-        plot_file = os.path.join(output_dir, f"roots_weights_plot_n{n_roots}.png")
+        plot_file = os.path.join(output_dir, f"roots_weights_plot.png")
         plt.savefig(plot_file, bbox_inches="tight")
         plt.close()
         yield f"Plot saved to {plot_file}\n"
