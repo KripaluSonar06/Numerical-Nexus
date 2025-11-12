@@ -5,6 +5,11 @@ import sys
 import time
 from numpy.polynomial import polynomial as P_mod
 from numpy.polynomial import legendre as L
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "2_2")  # change "2_2" to your question ID
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
 # Helper functions

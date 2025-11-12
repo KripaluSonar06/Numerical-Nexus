@@ -3,9 +3,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.polynomial.legendre import leggauss
-import os
-import time
 import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "3_1")  # change "2_2" to your question ID
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
 # Helper functions

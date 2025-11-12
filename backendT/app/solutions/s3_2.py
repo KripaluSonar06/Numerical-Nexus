@@ -4,8 +4,12 @@ import math
 import matplotlib.pyplot as plt
 from numpy.polynomial.legendre import leggauss
 from scipy.special import erf
-import os
 import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "2_2")  # change "2_2" to your question ID
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
 # Helper functions
