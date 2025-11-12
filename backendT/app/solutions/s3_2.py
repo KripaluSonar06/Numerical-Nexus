@@ -64,6 +64,7 @@ def gl_roots_with_endpoints(n):
 
 def coeff_2nd_diff(x): return x
 def coeff_1st_diff(x): return (1 + 2 * math.log(max(x, 1e-12)))
+smallest_num = math.ulp(0.0)
 
 
 # ------------------------------------------------------
@@ -140,11 +141,13 @@ def stream_s3_2(params):
             return sum((z ** i) * d[i] for i in range(n + 2))
 
         def T_X_tau(X, tau):
-            eta = X / (2 * np.sqrt(alpha * tau))
+            smallest_num = math.ulp(0.0)
+            eta = X / (2 * np.sqrt(max(alpha * tau, smallest_num)))
             return To + (Ts - To) * f_eta(eta)
 
         def T_analytical(X, tau):
-            return To + (Ts - To) * erf(X / (2 * np.sqrt(alpha * tau)))
+            smallest_num = math.ulp(0.0)
+            return To + (Ts - To) * erf(X / (2 * np.sqrt(max(alpha * tau, smallest_num))))
 
         T_X_tau_vec = np.vectorize(T_X_tau)
         T_analytical_vec = np.vectorize(T_analytical)
@@ -164,7 +167,7 @@ def stream_s3_2(params):
         plt.title(f"Temperature Profiles (Tau = {tau0:.2f} s, n={n})")
         plt.grid(True, linestyle="--", alpha=0.6)
         plt.legend()
-        plot_file = os.path.join(output_dir, f"temperature_profiles_n{n}.png")
+        plot_file = os.path.join(output_dir, f"temperature_profiles.png")
         plt.savefig(plot_file, bbox_inches="tight")
         plt.close()
         yield flush_line(f"Saved temperature comparison plot to {plot_file}")
@@ -173,7 +176,6 @@ def stream_s3_2(params):
         # Error matrix computation
         # ------------------------------------------------------
         yield flush_line("Computing temperature error matrix over x and Tau range...")
-        smallest_num = math.ulp(0.0)
         num_X = 101
         num_tau = 101
         X_vals_err = np.linspace(smallest_num, L + smallest_num, num_X)
@@ -190,7 +192,7 @@ def stream_s3_2(params):
 
         header_row = "X/Tau," + ",".join([f"{tau:.6e}" for tau in tau_vals_err])
         data_with_X = np.column_stack((X_vals_err, error_matrix))
-        csv_filename = os.path.join(output_dir, f"temperature_error_matrix_n{n}.csv")
+        csv_filename = os.path.join(output_dir, f"temperature_error_matrix.csv")
         np.savetxt(csv_filename, data_with_X, delimiter=",", header=header_row, comments="", fmt="%.6e")
 
         yield flush_line(f"Saved temperature error matrix to {csv_filename}")

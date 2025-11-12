@@ -697,9 +697,10 @@ os.startfile("B_matrix.csv")`
       question: 'Solve the ODE using Gauss-Legendre method with n points and compare with analytical solution.',
       inputs: [
         { id: 'n', label: 'Value of n', type: 'number', placeholder: '5' },
-        { id: 'To', label: 'Number of Points (n)', type: 'number', placeholder: '273' },
-        { id: 'Ts', label: 'Number of Points (n)', type: 'number', placeholder: '373' },
-        { id: 'alpha', label: 'Number of Points (n)', type: 'number', placeholder: '1e-5' }
+        { id: 'To', label: 'Enter To Value', type: 'number', placeholder: '273' },
+        { id: 'Ts', label: 'Enter Ts Value', type: 'number', placeholder: '373' },
+        { id: 'alpha', label: 'Enter alpha (diffusibility)', type: 'number', placeholder: '1e-5' },
+        { id: 'L', label: 'Enter L(Dimensioning factor)', type: 'number', placeholder: '5' }
       ],
       hasTerminal: true,
       hasPDF: true,

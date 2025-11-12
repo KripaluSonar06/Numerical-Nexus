@@ -2,10 +2,11 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, Response
+from fastapi.responses import FileResponse, StreamingResponse
 from app.schemas import SolveRequest
 import os
 import asyncio
+from app.solutions import s3_2_plot_api
 
 # ===============================================================
 # Initialize FastAPI
@@ -24,12 +25,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===============================================================
-# Directory setup
-# ===============================================================
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # backendT/
-OUTPUT_DIR = os.path.join(BASE_DIR, "output")  # backendT/output/
+# Directory for generated output files
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # project root (one level above app/)
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")  # project_root/output
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# ===============================================================
+# Include additional routers (for τ slider API)
+# ===============================================================
+app.include_router(s3_2_plot_api.router)
 
 # ===============================================================
 # Root route
@@ -45,13 +49,15 @@ async def root():
             "/stream/2_2",
             "/stream/3_1",
             "/stream/3_2",
-            "/stream/3_3",
         ],
         "file_endpoints": [
             "/files",
             "/files/{filename}",
             "/preview/{filename}",
         ],
+        "extra_routes": [
+            "/compute_temp  (for live τ-slider plotting)"
+        ]
     }
 
 # ===============================================================
@@ -61,56 +67,46 @@ def make_stream_response(generator_func, params):
     """Stream generator output line by line to frontend in real time."""
     async def event_stream():
         for line in generator_func(params):
-            if isinstance(line, str):
-                yield (line + "\n").encode("utf-8")
+            if isinstance(line, bytes):
+                chunk = line
             else:
-                yield str(line).encode("utf-8")
-            await asyncio.sleep(0)
-    return StreamingResponse(event_stream(), media_type="text/plain")
+                text = line if line.endswith("\n") else (line + "\n")
+                chunk = text.encode("utf-8")
+            yield chunk
+            await asyncio.sleep(0)  # yield control to event loop
+    return StreamingResponse(event_stream(), media_type="text/plain; charset=utf-8")
 
 # ===============================================================
 # STREAMING ASSIGNMENT ENDPOINTS
 # ===============================================================
-
 @app.post("/stream/2_1A")
 async def stream_2_1a(req: SolveRequest):
     from app.solutions import s2_1a
     return make_stream_response(s2_1a.stream_s2_1a, req.params)
-
 
 @app.post("/stream/2_1B")
 async def stream_2_1b(req: SolveRequest):
     from app.solutions import s2_1b
     return make_stream_response(s2_1b.stream_s2_1b, req.params)
 
-
 @app.post("/stream/2_2")
 async def stream_2_2(req: SolveRequest):
     from app.solutions import s2_2
     return make_stream_response(s2_2.stream_s2_2, req.params)
-
 
 @app.post("/stream/3_1")
 async def stream_3_1(req: SolveRequest):
     from app.solutions import s3_1
     return make_stream_response(s3_1.stream_s3_1, req.params)
 
-
 @app.post("/stream/3_2")
 async def stream_3_2(req: SolveRequest):
     from app.solutions import s3_2
     return make_stream_response(s3_2.stream_s3_2, req.params)
 
-
-@app.post("/stream/3_3")
-async def stream_3_3(req: SolveRequest):
-    from app.solutions import s3_3
-    return make_stream_response(s3_3.stream_s3_3, req.params)
-
 # ===============================================================
 # FILE MANAGEMENT ROUTES
 # ===============================================================
-
 @app.get("/files")
 async def list_files():
     """List all CSV and PNG files in the output folder."""
@@ -121,10 +117,9 @@ async def list_files():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.get("/files/{filename}")
 async def get_file(filename: str):
-    """Serve CSV or PNG file from the output directory with cache disabled."""
+    """Serve CSV or PNG file from the output directory."""
     file_path = os.path.join(OUTPUT_DIR, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
@@ -137,14 +132,7 @@ async def get_file(filename: str):
     else:
         media_type = "application/octet-stream"
 
-    # ✅ Disable browser caching for updated outputs
-    response = FileResponse(file_path, media_type=media_type, filename=filename)
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-
-    return response
-
+    return FileResponse(file_path, media_type=media_type, filename=filename)
 
 @app.get("/preview/{filename}")
 async def preview_file(filename: str, lines: int = 10):
@@ -156,7 +144,7 @@ async def preview_file(filename: str, lines: int = 10):
         raise HTTPException(status_code=400, detail="Preview only supports CSV files")
 
     try:
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = "".join([next(f) for _ in range(lines) if not f.closed])
         return {"filename": filename, "preview": content}
     except Exception as e:
