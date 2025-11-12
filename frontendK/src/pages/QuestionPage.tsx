@@ -28,6 +28,9 @@ const QuestionPage = () => {
   const [showPDF, setShowPDF] = useState(false);
   const [activeTab, setActiveTab] = useState('question');
   const [finalAnswer, setFinalAnswer] = useState<string>('');
+  const [isComputing, setIsComputing] = useState(false);
+  const [controller, setController] = useState<AbortController | null>(null);
+
 
   const isCompleted = completedQuestions[questionId || ''];
 
@@ -902,69 +905,7 @@ plt.show()`
     }
   };
 
-  {/*const handleCompute = () => {
-    // Generate terminal output based on question type
-    const lines = [
-      { text: 'Initializing numerical computation...', type: 'info' },
-      { text: 'Loading libraries (numpy, scipy)...', type: 'info' },
-      { text: `Processing ${currentQuestion.title}...`, type: 'info' },
-    ];
-
-    // Add question-specific terminal output
-    if (questionId === '2-Q1A' || questionId === '2-Q1B') {
-      lines.push(
-        { text: 'Testing Harshad number conditions...', type: 'info' },
-        { text: 'Checking divisibility by digit sum...', type: 'info' }
-      );
-    } else if (questionId === '2-Q2') {
-      lines.push(
-        { text: 'Computing Legendre polynomial coefficients...', type: 'info' },
-        { text: 'Generating companion matrix...', type: 'info' },
-        { text: 'Performing LU decomposition...', type: 'info' }
-      );
-    } else if (questionId === '3-Q1') {
-      lines.push(
-        { text: 'Computing eigenvalues and eigenvectors...', type: 'info' },
-        { text: 'Calculating roots and weights...', type: 'info' },
-        { text: 'Generating orthogonal collocation matrices...', type: 'info' },
-        { text: 'Creating plot: roots-weights.png...', type: 'info' }
-      );
-    } else if (questionId === '3-Q2') {
-      lines.push(
-        { text: 'Setting up ODE system...', type: 'info' },
-        { text: 'Applying Gauss-Legendre quadrature...', type: 'info' },
-        { text: 'Comparing with analytical solution...', type: 'info' }
-      );
-    }
-
-    lines.push(
-      { text: 'Computation completed successfully!', type: 'success' },
-      { text: `Input parameters: ${JSON.stringify(inputs)}`, type: 'info' }
-    );
-
-    // Set final answer based on question
-    if (questionId === '2-Q1A') {
-      setFinalAnswer('First non-Harshad factorial found: 4! = 24');
-    } else if (questionId === '2-Q1B') {
-      setFinalAnswer(`Found ${inputs.limit || 3} consecutive Harshad numbers: [1, 2, 4]`);
-    } else if (questionId === '2-Q2') {
-      setFinalAnswer('All subquestions (A-E) computed successfully. Check CSV outputs above.');
-    } else if (questionId === '3-Q1') {
-      setFinalAnswer(`Computed ${inputs.n || 5} roots and weights. Matrices A & B generated for m=${inputs.m || 3}.`);
-    } else if (questionId === '3-Q2') {
-      setFinalAnswer('ODE solution complete. Max error: 0.00123, Mean error: 0.00045');
-    }
-
-    setTerminalLines(lines);
-    setShowSolution(true);
-    setActiveTab('solution');
-
-    toast({
-      title: "Computation Complete",
-      description: "Check the solution tab for results",
-    });
-  };*/}
-  // =============================================
+// =============================================
 // BACKEND INTEGRATION FOR COMPUTATION
 // =============================================
 const handleCompute = async () => {
