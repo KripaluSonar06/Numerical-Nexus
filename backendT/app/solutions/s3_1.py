@@ -103,17 +103,12 @@ def stream_s3_1(params):
         yield f"Starting Gauss-Legendre computation for n={n_roots} roots...\n"
         x, w = roots_weights(n_roots)
 
-        df_rw = pd.DataFrame({"Roots (x)": x, "Weights (w)": w})
-        rw_file = os.path.join(output_dir, "roots-weights.csv")
-        df_rw.to_csv(rw_file, index=False)
-        yield f"Saved roots and weights to {rw_file}\n"
-
         for i in range(n_roots):
             yield f"x[{i}] = {x[i]:.8f}, w[{i}] = {w[i]:.8f}\n"
 
         # Generate and save the plot
         plt.figure(figsize=(7, 5))
-        plt.plot(x, w, "o-", color="black", markersize=6, label="Gauss–Legendre weights")
+        plt.plot(x, w, "o-", color="black", markersize=6, label="Gauss-Legendre weights")
         plt.xlabel("Roots (x)")
         plt.ylabel("Weights (w)")
         plt.title(f"Gauss-Legendre Weights vs Roots (n = {n_roots})")
@@ -134,11 +129,9 @@ def stream_s3_1(params):
         w_full = np.concatenate(([0.0], w_i, [0.0]))
 
         if n_matrices < 20:
-            yield "🔹 Using polynomial differentiation method (small n)\n"
             A = find_A(n_matrices, x_full)
             B = find_B(n_matrices, x_full)
         else:
-            yield "🔹 Using barycentric differentiation method (large n)\n"
             D = diff_matrix(x_full)
             D2 = D @ D
             A = D
@@ -146,12 +139,12 @@ def stream_s3_1(params):
 
         # Save A matrix
         A_file = os.path.join(output_dir, "A_matrix.csv")
-        np.savetxt(A_file, A, delimiter=",", fmt="%.6f")
+        np.savetxt(A_file, A, delimiter=",", fmt="%.6f", comments="", header="A-matrix")
         yield f"Saved A matrix to {A_file}\n"
 
         # Save B matrix
         B_file = os.path.join(output_dir, "B_matrix.csv")
-        np.savetxt(B_file, B, delimiter=",", fmt="%.6f")
+        np.savetxt(B_file, B, delimiter=",", fmt="%.6f", comments="", header="B-matrix")
         yield f"Saved B matrix to {B_file}\n"
 
         yield "\nAll computations completed successfully.\n"

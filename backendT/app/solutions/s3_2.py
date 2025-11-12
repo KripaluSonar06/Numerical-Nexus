@@ -151,32 +151,10 @@ def stream_s3_2(params):
             smallest_num = math.ulp(0.0)
             return To + (Ts - To) * erf(X / (2 * np.sqrt(max(alpha * tau, smallest_num))))
 
-        T_X_tau_vec = np.vectorize(T_X_tau)
-        T_analytical_vec = np.vectorize(T_analytical)
-
-        # ------------------------------------------------------
-        # Generate and save temperature comparison plot
-        # ------------------------------------------------------
-        yield flush_line("Generating temperature profile comparison plot...")
-        X_vals = np.linspace(0, L, int(100 * L))
-        tau0 = 0.5
-
-        plt.figure(figsize=(8, 6))
-        plt.plot(X_vals, T_X_tau_vec(X_vals, tau0), "b-", lw=2, label="Collocation (Numerical)")
-        plt.plot(X_vals, T_analytical_vec(X_vals, tau0), "r--", lw=2, label="Analytical (erf)")
-        plt.xlabel("Position X (m)")
-        plt.ylabel("Temperature T (K)")
-        plt.title(f"Temperature Profiles (Tau = {tau0:.2f} s, n={n})")
-        plt.grid(True, linestyle="--", alpha=0.6)
-        plt.legend()
-        plot_file = os.path.join(output_dir, f"temperature_profiles.png")
-        plt.savefig(plot_file, bbox_inches="tight")
-        plt.close()
-        yield flush_line(f"Saved temperature comparison plot to {plot_file}")
-
         # ------------------------------------------------------
         # Error matrix computation
         # ------------------------------------------------------
+        
         yield flush_line("Computing temperature error matrix over x and Tau range...")
         num_X = 101
         num_tau = 101

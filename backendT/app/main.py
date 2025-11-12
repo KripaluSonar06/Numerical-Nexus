@@ -7,6 +7,7 @@ from app.schemas import SolveRequest
 import os
 import asyncio
 from app.solutions import s3_2_plot_api
+from urllib.parse import unquote
 
 # ===============================================================
 # Initialize FastAPI
@@ -138,7 +139,7 @@ async def list_files(question_id: str):
         raise HTTPException(status_code=404, detail="Directory not found")
 
     files = [
-        os.path.join(question_id, f)
+        f"{question_id}/{f}"
         for f in os.listdir(folder_path)
         if f.endswith((".csv", ".png"))
     ]
@@ -160,26 +161,54 @@ async def list_all_files():
     return {"available_files": all_files}
 
 
-@app.get("/preview/{filename}")
+@app.get("/preview/{filename:path}")
 async def preview_file(filename: str, lines: int = 10):
-    """Preview the first few lines of a CSV file."""
-    file_path = os.path.join(OUTPUT_DIR, filename)
+    safe_filename = unquote(filename).replace("\\", "/")
+    file_path = os.path.join(OUTPUT_DIR, safe_filename)
+    file_path = os.path.normpath(file_path)
+
+    if not file_path.startswith(os.path.abspath(OUTPUT_DIR)):
+        raise HTTPException(status_code=400, detail="Invalid file path")
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
-    if not filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+    if not file_path.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Preview only supports CSV files")
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             content = "".join([next(f) for _ in range(lines) if not f.closed])
-        return {"filename": filename, "preview": content}
+        return {"filename": safe_filename, "preview": content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
 
 @app.get("/download/{filename:path}")
 def download_file(filename: str):
     """Download a file from any subfolder within output/."""
-    file_path = os.path.join(OUTPUT_DIR, filename)
+    safe_filename = filename.replace("\\", "/")  # convert Windows-style paths
+    file_path = os.path.join(OUTPUT_DIR, safe_filename)
     if os.path.exists(file_path):
         return FileResponse(file_path, filename=os.path.basename(file_path))
     raise HTTPException(status_code=404, detail="File not found")
+
+@app.get("/fullcsv/{filename:path}")
+async def full_csv(filename: str):
+    """Return the entire CSV content as a JSON table for frontend rendering."""
+    safe_filename = unquote(filename).replace("\\", "/")
+    file_path = os.path.join(OUTPUT_DIR, safe_filename)
+    file_path = os.path.normpath(file_path)
+
+    if not file_path.startswith(os.path.abspath(OUTPUT_DIR)):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+    if not file_path.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Preview only supports CSV files")
+
+    try:
+        import csv
+        with open(file_path, "r", encoding="utf-8-sig") as f:
+            reader = csv.reader(f)
+            rows = [row for row in reader]
+        return {"filename": safe_filename, "rows": rows}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {e}")

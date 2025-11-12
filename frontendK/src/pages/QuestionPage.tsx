@@ -1,12 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCompletion } from '@/contexts/CompletionContext';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { TerminalWindow } from '@/components/TerminalWindow';
 import { CodeViewer } from '@/components/CodeViewer';
-import { CSVTable } from '@/components/CSVTable';
-import { ImageViewer } from '@/components/ImageViewer';
 import { PDFViewer } from '@/components/PDFViewer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, CheckCircle, Play, Code2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import CSVViewer from "@/components/CSVViewer";
 
 const QuestionPage = () => {
   const navigate = useNavigate();
@@ -31,9 +30,20 @@ const QuestionPage = () => {
   const [finalAnswer, setFinalAnswer] = useState<string>('');
   const [isComputing, setIsComputing] = useState(false);
   const [controller, setController] = useState<AbortController | null>(null);
-
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [previewingFile, setPreviewingFile] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const isCompleted = completedQuestions[questionId || ''];
+
+  useEffect(() => {
+    if (availableFiles && availableFiles.length > 0) {
+      setShowFilesModal(true);
+      // optional: auto-preview the first CSV automatically:
+      fetchPreview(availableFiles[0]);
+    }
+  }, [availableFiles]);
 
   const questionData: Record<string, any> = {
     '2-Q1A': {
@@ -858,6 +868,26 @@ slider_tau.on_changed(update)
 plt.show()`
     }
   };
+  const fetchPreview = async (filePath: string, lines = 20) => {
+    try {
+      setIsPreviewLoading(true);
+      setPreviewingFile(filePath);
+      setPreviewContent(null);
+      const res = await fetch(`http://127.0.0.1:8000/preview/${encodeURIComponent(filePath)}?lines=${lines}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || `Preview failed: ${res.status}`);
+      }
+      const data = await res.json();
+      // data.preview is a string of CSV lines
+      setPreviewContent(data.preview || "No preview available");
+    } catch (err: any) {
+      setPreviewContent(`Error fetching preview: ${err.message || err}`);
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
 
   const currentQuestion = questionData[questionId || ''];
 
@@ -1129,7 +1159,7 @@ plt.show()`
                   {currentQuestion?.hasTerminal && !showCode && (
                     <TerminalWindow lines={terminalLines} isActive={showSolution} isComputing={isComputing} />
                   )}
-                  
+
                   {/* Image Preview Section */}
                   {availableFiles.some(f => f.endsWith(".png")) && (
                     <div className="mt-6 space-y-4">
@@ -1147,26 +1177,46 @@ plt.show()`
                     </div>
                   )}
 
+                  {/* Files Modal */}
+                  <div className="mt-4 p-4 border border-gray-700 rounded-lg bg-gray-800">
+                    <h4 className="text-white font-semibold mb-2">File Preview</h4>
+                    {previewingFile ? (
+                      previewingFile.endsWith(".csv") ? (
+                        <CSVViewer fileUrl={previewingFile} />
+                      ) : (
+                        <p>Preview not available for this file type</p>
+                      )
+                    ) : (
+                      <p className="text-gray-400 italic">Select a file to preview</p>
+                    )}
+                  </div>
+
                   {/* SHOW FILES */}
-                  {availableFiles.length > 0 && (
-                    <div className="mt-6 p-4 border border-gray-700 rounded-lg bg-gray-900">
-                      <h3 className="text-xl font-semibold mb-3 text-white">Generated Files</h3>
-                      <ul className="list-disc pl-6 text-gray-300">
-                        {availableFiles.map((file) => (
-                          <li key={file}>
-                            <a
-                              href={`http://127.0.0.1:8000/download/${encodeURIComponent(file)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:underline"
-                            >
-                              {file.split("/").pop()}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <ul className="list-disc pl-6 text-gray-300 space-y-1">
+                    {availableFiles.map((file) => {
+                      const isCSV = file.endsWith(".csv");
+                      const isSelected = previewingFile === file;
+                      return (
+                        <li key={file} className="flex items-center justify-between">
+                          <button
+                            onClick={() => setPreviewingFile(file)}
+                            className={`text-left text-blue-400 hover:underline ${isSelected ? "font-semibold text-blue-300" : ""
+                              }`}
+                          >
+                            {file.split("/").pop()}
+                          </button>
+                          <a
+                            href={`http://127.0.0.1:8000/download/${encodeURIComponent(file)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-green-400 hover:text-green-300 ml-4"
+                          >
+                            Download
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
 
                   {/* Final Answer Section */}
                   {!showCode && finalAnswer && (
