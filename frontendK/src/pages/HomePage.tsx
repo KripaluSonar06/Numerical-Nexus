@@ -14,20 +14,20 @@ const HomePage: React.FC = () => {
   const teamMembers = [
     { name: "Malhar", roll: "ES24BTECH11018" },
     { name: "Kripalu", roll: "ES24BTECH11021" },
-    { name: "Taleem", roll: "ES24BTECH11021" },
+    { name: "Taleem", roll: "ES24BTECH11036" },
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* --- Background Gradient --- */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-purple-950/20 to-background" />
-      <div className="absolute inset-0 -z-10">
+      <div className="fixed inset-0 -z-10">
   <div style={{ width: "100%", height: "100%", position: "relative" }}>
     <LiquidEther
       colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
       mouseForce={20}
       cursorSize={70}
-      isViscous={false}
+      isViscous={true}
       viscous={30}
       iterationsViscous={32}
       iterationsPoisson={32}
