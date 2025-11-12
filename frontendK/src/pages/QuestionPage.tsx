@@ -1216,10 +1216,11 @@ const handleCompute = async () => {
                   {/* Image Output */}
                   {currentQuestion?.hasImage && !showCode && (
                     <ImageViewer
-                      src="http://127.0.0.1:8000/output/roots_weights_plot_n6.png"
+                      src={`http://127.0.0.1:8000/files/roots_weights_plot.png`}
                       alt="Roots vs Weights Plot"
-                      filename="roots-weights.png"
+                      filename="roots_weights_plot.png"
                     />
+
                   )}
 
                   {/* Text Output for Q2E */}

@@ -25,9 +25,9 @@ app.add_middleware(
 )
 
 # Directory for generated output files
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # backendT/
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")  # backendT/output/
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-
 # ===============================================================
 # Root route
 # ===============================================================
