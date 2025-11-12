@@ -1,5 +1,14 @@
 # app/solutions/s2_1a.py
-from decimal import Decimal
+import sys
+
+# ============================================================
+# Helper functions
+# ============================================================
+
+def flush_line(line: str):
+    """Force immediate flush of a line for true real-time streaming."""
+    sys.stdout.flush()
+    return f"{line.rstrip()}\n"
 
 def factorial(i):
     f = 1
@@ -12,7 +21,7 @@ def Check_Harshad(f):
     num = str(f)
     s = sum(int(d) for d in num)
     if s == 0:
-        return False, s
+        return False
     return f % s == 0
 
 
@@ -27,25 +36,34 @@ def stream_s2_1a(params):
     Streams progress and results continuously without waiting for input.
     """
 
-    start = int(params.get("start", 1))
-    end = int(params.get("end", 10))
+    try:
+        start = int(params.get("start", 1))
+        end = int(params.get("end", 10))
 
-    yield f"Starting Harshad factorial check for range [{start}, {end}]...\n"
+        yield flush_line(f"Starting Harshad factorial check for range [{start}, {end}]...")
 
-    f = factorial(start)
-    first = start
+        f = factorial(start)
+        first = start
 
-    while True:
-        is_harshad = Check_Harshad(f)
-        if is_harshad:
-            yield f"{start}! is a Harshad number.\n"
-            start += 1
-            if start > end:
-                yield f"\nAll factorials in range ({first}! ... {end}!) are Harshad numbers.\n"
-                yield "---END---"
+        while True:
+            yield flush_line(f"Checking {start}! = {f} ...")
+
+            is_harshad = Check_Harshad(f)
+
+            if is_harshad:
+                yield flush_line(f"{start}! is a Harshad number ✅")
+                start += 1
+                if start > end:
+                    yield flush_line(f"\nAll factorials in range ({first}! ... {end}!) are Harshad numbers ✅")
+                    yield flush_line("---END---")
+                    return
+                f *= start
+            else:
+                yield flush_line(f"{start}! = {f}")
+                yield flush_line(f"{start}! is NOT a Harshad number ❌")
+                yield flush_line("---END---")
                 return
-            f *= start
-        else:
-            yield f"{start}! = {f}\n{start}! is NOT a Harshad number!!!\n"
-            yield "---END---"
-            return
+
+    except Exception as e:
+        yield flush_line(f"Error: {str(e)}")
+        yield flush_line("---END---")

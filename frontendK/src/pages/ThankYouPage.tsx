@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Trophy, Sparkles, Home } from 'lucide-react';
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import LiquidEther from '@/components/LiqEther';
+import ParticleSystem from '@/components/ParticleSystem';
 
 const ThankYouPage = () => {
   const navigate = useNavigate();
@@ -45,6 +47,36 @@ const ThankYouPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-purple-950/20 to-background p-8 flex items-center justify-center">
+       <div className="absolute inset-0 -z-10">
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
+          <ParticleSystem
+      
+          />
+        </div>
+      </div> 
+      
+      <div className="absolute inset-0 -z-10">
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
+          <LiquidEther
+            colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
+            mouseForce={20}
+            cursorSize={70}
+            isViscous={false}
+            viscous={30}
+            iterationsViscous={32}
+            iterationsPoisson={32}
+            resolution={0.5}
+            isBounce={false}
+            autoDemo={true}
+            autoSpeed={1}
+            autoIntensity={2.2}
+            takeoverDuration={0.25}
+            autoResumeDelay={3000}
+            autoRampDuration={0.6}
+          />
+        </div>
+      </div> 
+
       <div className="max-w-4xl mx-auto text-center">
         {/* Trophy Icon with Animation */}
         <motion.div

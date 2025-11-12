@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from app.schemas import SolveRequest
 import os
+import asyncio
 
 # ===============================================================
 # Initialize FastAPI
@@ -54,10 +55,14 @@ async def root():
 # Helper: Unified Stream Wrapper
 # ===============================================================
 def make_stream_response(generator_func, params):
-    """Wrap generator function to stream line-by-line responses."""
-    def event_stream():
+    """Stream generator output line by line to frontend in real time."""
+    async def event_stream():
         for line in generator_func(params):
-            yield line
+            if isinstance(line, str):
+                yield (line + "\n").encode("utf-8")
+            else:
+                yield str(line).encode("utf-8")
+            await asyncio.sleep(0)
     return StreamingResponse(event_stream(), media_type="text/plain")
 
 # ===============================================================

@@ -910,42 +910,37 @@ plt.show()`
 // =============================================
 const handleCompute = async () => {
   try {
-    setTerminalLines([{ text: "🔌 Connecting to backend stream...", type: "info" }]);
+    // Switch to Solution tab instantly
+    setActiveTab("solution");
+    setShowSolution(true);
+    setIsComputing(true);
 
-    // Map question IDs to backend endpoints
-    let endpoint = "";
-    switch (questionId) {
-      case "2-Q1A":
-        endpoint = "2_1A";
-        break;
-      case "2-Q1B":
-        endpoint = "2_1B";
-        break;
-      case "2-Q2":
-        endpoint = "2_2";
-        break;
-      case "3-Q1":
-        endpoint = "3_1";
-        break;
-      case "3-Q2":
-        endpoint = "3_2";
-        break;
-      case "3-Q3":
-        endpoint = "3_3";
-        break;
-      default:
-        toast({
-          title: "Invalid Question",
-          description: "No backend endpoint found for this question.",
-          variant: "destructive",
-        });
-        return;
+    // Reset terminal
+    setTerminalLines([{ text: "🔌 Connecting to backend...", type: "info" }]);
+
+    // Map Question ID to backend endpoint
+    const endpointMap: Record<string, string> = {
+      "2-Q1A": "2_1A",
+      "2-Q1B": "2_1B",
+      "2-Q2": "2_2",
+      "3-Q1": "3_1",
+      "3-Q2": "3_2",
+      "3-Q3": "3_3",
+    };
+
+    const endpoint = endpointMap[questionId];
+    if (!endpoint) {
+      toast({
+        title: "Invalid Question",
+        description: "No backend endpoint found for this question.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    const API_BASE = "http://127.0.0.1:8000";
-    const url = `${API_BASE}/stream/${endpoint}`;
+    const url = `http://127.0.0.1:8000/stream/${endpoint}`;
 
-    // Fetch with streaming reader
+    // Call backend API (streaming)
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -959,54 +954,53 @@ const handleCompute = async () => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
 
-    let outputBuffer = "";
-    let finalLines: { text: string; type: string }[] = [];
-
+    let buffer = "";
     setTerminalLines((prev) => [
       ...prev,
       { text: `Connected to ${url}`, type: "success" },
       { text: "📡 Receiving stream...", type: "info" },
     ]);
 
-    // Read chunks as they arrive
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
 
-      outputBuffer += decoder.decode(value, { stream: true });
-
-      const lines = outputBuffer.split(/\r?\n/);
-      outputBuffer = lines.pop() || ""; // keep partial line
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() || "";
 
       for (const line of lines) {
-        if (line.trim() !== "") {
-          setTerminalLines((prev) => [...prev, { text: line, type: "output" }]);
-          finalLines.push({ text: line, type: "output" });
+        if (!line.trim()) continue;
+        if (line.includes("---END---")) {
+          setTerminalLines((prev) => [
+            ...prev,
+            { text: "✅ Computation complete.", type: "success" },
+          ]);
+          setIsComputing(false);
+          toast({
+            title: "Computation Complete ✅",
+            description: "Streaming completed successfully.",
+          });
+          return;
         }
+
+        // Append each line instantly
+        setTerminalLines((prev) => [...prev, { text: line, type: "output" }]);
       }
     }
 
-    if (outputBuffer.trim() !== "") {
-      setTerminalLines((prev) => [...prev, { text: outputBuffer, type: "output" }]);
-      finalLines.push({ text: outputBuffer, type: "output" });
-    }
-
-    const lastLine = finalLines.length > 0 ? finalLines[finalLines.length - 1].text : "No output received.";
-    setFinalAnswer(lastLine);
-    setShowSolution(true);
-    setActiveTab("solution");
-
+    setIsComputing(false);
     toast({
       title: "Computation Complete ✅",
-      description: "Streaming completed successfully.",
+      description: "Streaming finished.",
     });
   } catch (error: any) {
     console.error("Streaming error:", error);
+    setIsComputing(false);
     setTerminalLines([
       { text: "❌ Streaming error occurred.", type: "error" },
-      { text: error.message, type: "error" },
+      { text: error.message || "Unknown error occurred.", type: "error" },
     ]);
-
     toast({
       title: "Backend Error",
       description: error.message || "Unknown error occurred.",
@@ -1014,6 +1008,9 @@ const handleCompute = async () => {
     });
   }
 };
+
+
+
 
 
 
@@ -1142,7 +1139,7 @@ const handleCompute = async () => {
                   onClick={handleCompute}
                   className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   size="lg"
-                  disabled={showSolution}
+                  //disabled={showSolution}
                 >
                   <Play className="w-4 h-4 mr-2" />
                   {showSolution ? 'Solution Generated' : 'Get Solution'}
@@ -1169,7 +1166,7 @@ const handleCompute = async () => {
 
                   {/* Terminal Output */}
                   {currentQuestion?.hasTerminal && !showCode && (
-                    <TerminalWindow lines={terminalLines} />
+                    <TerminalWindow lines={terminalLines} isActive={showSolution} isComputing={isComputing} />
                   )}
 
                   {/* CSV Outputs */}
@@ -1219,7 +1216,7 @@ const handleCompute = async () => {
                   {/* Image Output */}
                   {currentQuestion?.hasImage && !showCode && (
                     <ImageViewer
-                      src="/placeholder.svg"
+                      src="http://127.0.0.1:8000/output/roots_weights_plot_n6.png"
                       alt="Roots vs Weights Plot"
                       filename="roots-weights.png"
                     />

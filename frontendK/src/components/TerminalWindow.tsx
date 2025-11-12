@@ -1,49 +1,42 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from "react";
 
 interface TerminalLine {
   text: string;
-  type?: 'success' | 'error' | 'warning' | 'info';
+  type?: "success" | "error" | "warning" | "info";
 }
 
 interface TerminalWindowProps {
   lines: TerminalLine[];
   isActive?: boolean;
+  isComputing?: boolean;
 }
 
-export const TerminalWindow = ({ lines, isActive = true }: TerminalWindowProps) => {
-  const [visibleLines, setVisibleLines] = useState<number>(0);
+export const TerminalWindow = ({
+  lines,
+  isActive = true,
+  isComputing = false,
+}: TerminalWindowProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (lines.length > 0) {
-      setVisibleLines(0);
-      const timer = setInterval(() => {
-        setVisibleLines(prev => {
-          if (prev >= lines.length) {
-            clearInterval(timer);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 100);
-      return () => clearInterval(timer);
-    }
-  }, [lines]);
-
+  // Auto-scroll when new lines arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [visibleLines]);
+  }, [lines]);
 
   const getLineColor = (type?: string) => {
     switch (type) {
-      case 'success': return 'text-success';
-      case 'error': return 'text-destructive';
-      case 'warning': return 'text-yellow-500';
-      case 'info': return 'text-accent';
-      default: return 'text-foreground';
+      case "success":
+        return "text-green-400";
+      case "error":
+        return "text-red-400";
+      case "warning":
+        return "text-yellow-400";
+      case "info":
+        return "text-blue-400";
+      default:
+        return "text-gray-200";
     }
   };
 
@@ -52,39 +45,33 @@ export const TerminalWindow = ({ lines, isActive = true }: TerminalWindowProps) 
       {/* Terminal Header */}
       <div className="bg-card/20 border-b border-glass-border/20 px-4 py-2 flex items-center space-x-2">
         <div className="flex space-x-2">
-          <div className="w-3 h-3 rounded-full bg-destructive/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-success/80" />
+          <div className="w-3 h-3 rounded-full bg-red-500/80" />
+          <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
+          <div className="w-3 h-3 rounded-full bg-green-500/80" />
         </div>
-        <span className="text-xs text-muted-foreground ml-4">Terminal Output</span>
+        <span className="text-xs text-muted-foreground ml-4">
+          Terminal Output
+        </span>
       </div>
 
       {/* Terminal Content */}
-      <div 
+      <div
         ref={scrollRef}
         className="bg-background/50 p-4 font-mono text-sm h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-accent/50 scrollbar-track-transparent"
       >
-        <AnimatePresence>
-          {lines.slice(0, visibleLines).map((line, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`mb-1 ${getLineColor(line.type)}`}
-            >
-              <span className="text-accent mr-2">$</span>
-              {line.text}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        
-        {isActive && visibleLines >= lines.length && (
-          <motion.span
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-            className="inline-block w-2 h-4 bg-accent ml-1"
-          />
+        {lines.map((line, index) => (
+          <div key={index} className={`mb-1 ${getLineColor(line.type)}`}>
+            <span className="text-accent mr-2">$</span>
+            {line.text}
+          </div>
+        ))}
+
+        {/* Cursor animation */}
+        {isActive && !isComputing && (
+          <span className="inline-block w-2 h-4 bg-accent animate-pulse ml-1" />
+        )}
+        {isComputing && (
+          <div className="text-accent/70 animate-pulse mt-2">⏳ Computing...</div>
         )}
       </div>
     </div>

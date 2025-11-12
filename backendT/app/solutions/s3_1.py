@@ -5,10 +5,16 @@ import matplotlib.pyplot as plt
 from numpy.polynomial.legendre import leggauss
 import os
 import time
+import sys
 
 # ============================================================
 # Helper functions
 # ============================================================
+
+def flush_line(line: str):
+    """Force immediate flush of a line."""
+    sys.stdout.flush()
+    return f"{line.rstrip()}\n"
 
 def find_A(n, x):
     Q = np.zeros((n + 2, n + 2))
@@ -101,7 +107,6 @@ def stream_s3_1(params):
 
         for i in range(n_roots):
             yield f"x[{i}] = {x[i]:.8f}, w[{i}] = {w[i]:.8f}\n"
-            time.sleep(0.05)
 
         # Generate and save the plot
         plt.figure(figsize=(7, 5))

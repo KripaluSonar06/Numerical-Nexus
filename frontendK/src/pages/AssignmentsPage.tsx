@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Brain } from "lucide-react";
 import GlareHover from "@/components/GlareHover";
 import LiquidEther from "@/components/LiqEther";
+import ParticleSystem from "@/components/ParticleSystem";
 
 
 const AssignmentsPage = () => {
@@ -39,6 +40,14 @@ const AssignmentsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-purple-950/20 to-background p-8">
       <div className="absolute inset-0 -z-10">
         <div style={{ width: "100%", height: "100%", position: "relative" }}>
+          <ParticleSystem
+      
+          />
+        </div>
+      </div> 
+      
+      <div className="absolute inset-0 -z-10">
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
           <LiquidEther
             colors={["#5227FF", "#FF9FFC", "#B19EEF"]}
             mouseForce={20}
@@ -50,7 +59,7 @@ const AssignmentsPage = () => {
             resolution={0.5}
             isBounce={false}
             autoDemo={true}
-            autoSpeed={0.5}
+            autoSpeed={1}
             autoIntensity={2.2}
             takeoverDuration={0.25}
             autoResumeDelay={3000}
