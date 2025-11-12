@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from app.schemas import SolveRequest
 import os
 import asyncio
@@ -24,10 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Directory for generated output files
+# ===============================================================
+# Directory setup
+# ===============================================================
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # backendT/
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")  # backendT/output/
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 # ===============================================================
 # Root route
 # ===============================================================
@@ -104,7 +107,6 @@ async def stream_3_3(req: SolveRequest):
     from app.solutions import s3_3
     return make_stream_response(s3_3.stream_s3_3, req.params)
 
-
 # ===============================================================
 # FILE MANAGEMENT ROUTES
 # ===============================================================
@@ -122,7 +124,7 @@ async def list_files():
 
 @app.get("/files/{filename}")
 async def get_file(filename: str):
-    """Serve CSV or PNG file from the output directory."""
+    """Serve CSV or PNG file from the output directory with cache disabled."""
     file_path = os.path.join(OUTPUT_DIR, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
@@ -135,7 +137,13 @@ async def get_file(filename: str):
     else:
         media_type = "application/octet-stream"
 
-    return FileResponse(file_path, media_type=media_type, filename=filename)
+    # ✅ Disable browser caching for updated outputs
+    response = FileResponse(file_path, media_type=media_type, filename=filename)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+
+    return response
 
 
 @app.get("/preview/{filename}")

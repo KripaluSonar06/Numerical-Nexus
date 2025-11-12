@@ -27,6 +27,7 @@ const QuestionPage = () => {
   const [showCode, setShowCode] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
   const [activeTab, setActiveTab] = useState('question');
+  const [availableFiles, setAvailableFiles] = useState<string[]>([]);
   const [finalAnswer, setFinalAnswer] = useState<string>('');
   const [isComputing, setIsComputing] = useState(false);
   const [controller, setController] = useState<AbortController | null>(null);
@@ -914,6 +915,7 @@ const handleCompute = async () => {
     setActiveTab("solution");
     setShowSolution(true);
     setIsComputing(true);
+    setAvailableFiles([]); // clear previous files before computing
 
     // Reset terminal
     setTerminalLines([{ text: "🔌 Connecting to backend...", type: "info" }]);
@@ -977,6 +979,13 @@ const handleCompute = async () => {
             { text: "✅ Computation complete.", type: "success" },
           ]);
           setIsComputing(false);
+           try {
+            const res = await fetch("http://127.0.0.1:8000/files");
+            const data = await res.json();
+            setAvailableFiles(data.available_files || []);
+          } catch (err) {
+            console.error("Error fetching files:", err);
+          }
           toast({
             title: "Computation Complete ✅",
             description: "Streaming completed successfully.",
@@ -1214,14 +1223,15 @@ const handleCompute = async () => {
                   )}
 
                   {/* Image Output */}
-                  {currentQuestion?.hasImage && !showCode && (
-                    <ImageViewer
-                      src={`http://127.0.0.1:8000/files/roots_weights_plot.png`}
-                      alt="Roots vs Weights Plot"
-                      filename="roots_weights_plot.png"
-                    />
-
+                 {currentQuestion?.hasImage && !showCode && availableFiles.some(f => f.endsWith(".png")) && (
+                  <ImageViewer
+                    key={availableFiles.find(f => f.endsWith(".png"))}
+                    src={`http://127.0.0.1:8000/files/${availableFiles.find(f => f.endsWith(".png"))}?t=${Date.now()}`}
+                    alt="Generated Output"
+                    filename={availableFiles.find(f => f.endsWith(".png")) || ""}
+                  />
                   )}
+
 
                   {/* Text Output for Q2E */}
                   {currentQuestion?.subquestions?.some((sub: any) => sub.outputType === 'text') && !showCode && (
