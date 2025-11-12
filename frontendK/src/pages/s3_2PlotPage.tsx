@@ -9,13 +9,13 @@ const Plot = createPlotlyComponent(Plotly);
 const S3_2PlotPage: React.FC = () => {
     const navigate = useNavigate();
     const [params, setParams] = useState({
-        n: 8,
+        n: 1,
         To: 273,
         Ts: 373,
-        alpha: 1e-5,
+        alpha: 5e-4,
         L: 5,
     });
-    const [tau, setTau] = useState(0.5);
+    const [tau, setTau] = useState(0.0);
     const [data, setData] = useState<{ X: number[]; T_coll: number[]; T_anal: number[] } | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -61,6 +61,66 @@ const S3_2PlotPage: React.FC = () => {
                 <ArrowLeft size={18} />
                 Back to Assignment
             </button>
+
+            {/* --- MOVE PLOT TO TOP --- */}
+            <div className="mb-6">
+                {loading ? (
+                    <p>Computing...</p>
+                ) : data ? (
+                    <Plot
+                        data={[
+                            {
+                                x: data.X,
+                                y: data.T_anal,
+                                mode: "lines",
+                                name: "Analytical (erf)",
+                                line: { color: "red", width: 5 },
+                            },
+                            {
+                                x: data.X,
+                                y: data.T_coll,
+                                mode: "lines",
+                                name: "Collocation (Numerical)",
+                                line: { color: "blue", dash: "dot", width: 3 },
+                            },
+                        ]}
+                        layout={{
+                            title: {
+                                text: `Temperature Profiles for τ = ${tau.toFixed(2)} s`,
+                                font: { color: "#000000ff" },
+                            },
+                            xaxis: { title: { text: "X (m)" }, color: "#000000ff" },
+                            yaxis: { title: { text: "Temperature (K)" }, color: "#000000ff" },
+                            plot_bgcolor: "#ffffffff",
+                            paper_bgcolor: "#ffffffff",
+                            font: { color: "#000000ff" },
+                            height: 500,
+                        } as Partial<Plotly.Layout>}
+                        style={{ width: "100%" }}
+                    />
+                ) : (
+                    <p>No data yet.</p>
+                )}
+            </div>
+
+            {/* Tau Slider */}
+            <div className="mb-4">
+                <label className="block font-medium">τ (tau): {tau.toFixed(2)}</label>
+                <input
+                    type="range"
+                    min="0.0"
+                    max="10000.0"
+                    step="0.5"
+                    value={tau}
+                    onChange={(e) => {
+                        const newTau = parseFloat(e.target.value);
+                        setTau(newTau);
+                        fetchData(newTau);
+                    }}
+                    className="w-full"
+                />
+            </div>
+
             {/* Parameter Inputs */}
             <div className="grid grid-cols-2 gap-4 mb-4">
                 {Object.entries(params).map(([key, value]) => (
@@ -78,24 +138,6 @@ const S3_2PlotPage: React.FC = () => {
                 ))}
             </div>
 
-            {/* Tau Slider */}
-            <div className="mb-4">
-                <label className="block font-medium">τ (tau): {tau.toFixed(2)}</label>
-                <input
-                    type="range"
-                    min="0.5"
-                    max="10000"
-                    step="0.5"
-                    value={tau}
-                    onChange={(e) => {
-                        const newTau = parseFloat(e.target.value);
-                        setTau(newTau);
-                        fetchData(newTau);
-                    }}
-                    className="w-full"
-                />
-            </div>
-
             {/* Run Button */}
             <button
                 onClick={() => fetchData(tau)}
@@ -103,43 +145,6 @@ const S3_2PlotPage: React.FC = () => {
             >
                 Run
             </button>
-
-            {/* Plot */}
-            <div className="mt-6">
-                {loading ? (
-                    <p>Computing...</p>
-                ) : data ? (
-                    <Plot
-                        data={[
-                            {
-                                x: data.X,
-                                y: data.T_coll,
-                                mode: "lines",
-                                name: "Collocation (Numerical)",
-                                line: { color: "blue" },
-                            },
-                            {
-                                x: data.X,
-                                y: data.T_anal,
-                                mode: "lines",
-                                name: "Analytical (erf)",
-                                line: { color: "red", dash: "dash" },
-                            },
-                        ]}
-                        layout={{
-                            title: {
-                                text: `Temperature Profiles for τ = ${tau.toFixed(2)} s`,
-                            },
-                            xaxis: { title: { text: "X (m)" } },
-                            yaxis: { title: { text: "Temperature (K)" } },
-                            height: 500,
-                        } as Partial<Plotly.Layout>}
-                        style={{ width: "100%" }}
-                    />
-                ) : (
-                    <p>No data yet.</p>
-                )}
-            </div>
         </div>
     );
 };

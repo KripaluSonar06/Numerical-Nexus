@@ -38,7 +38,7 @@ def stream_s2_1a(params):
 
     try:
         start = int(params.get("start", 1))
-        end = int(params.get("end", 10))
+        end = int(params.get("end", 500))
 
         yield flush_line(f"Starting Harshad factorial check for range [{start}, {end}]...")
 

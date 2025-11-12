@@ -1,4 +1,4 @@
-# app/solutions/s3_2_stream.py
+# app/solutions/s3_1.py
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,8 +6,8 @@ from numpy.polynomial.legendre import leggauss
 import sys
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
-OUTPUT_DIR = os.path.join(BASE_DIR, "output", "3_1")  # change "2_2" to your question ID
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "3_1")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
@@ -94,7 +94,7 @@ def stream_s3_1(params):
     try:
         n_roots = int(params.get("n_roots", 6))
         n_matrices = int(params.get("n_matrices", 6))
-        output_dir = os.path.join(os.getcwd(), "output")
+        output_dir = OUTPUT_DIR
         os.makedirs(output_dir, exist_ok=True)
 
         # ------------------------

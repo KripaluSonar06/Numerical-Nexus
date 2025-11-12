@@ -132,18 +132,18 @@ async def stream_3_2(req: SolveRequest):
 # ===============================================================
 @app.get("/files/{question_id}")
 async def list_files(question_id: str):
-    """List all CSV/PNG files in the subfolder for a specific question."""
-    try:
-        folder = get_question_dir(question_id)
-        files = [
-            f"{question_id}/{f}"
-            for f in os.listdir(folder)
-            if f.endswith((".csv", ".png"))
-        ]
-        files.sort()
-        return {"available_files": files}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """List all CSV and PNG files inside output/<question_id>."""
+    folder_path = os.path.join(OUTPUT_DIR, question_id)
+    if not os.path.exists(folder_path):
+        raise HTTPException(status_code=404, detail="Directory not found")
+
+    files = [
+        os.path.join(question_id, f)
+        for f in os.listdir(folder_path)
+        if f.endswith((".csv", ".png"))
+    ]
+    files.sort()
+    return {"available_files": files}
 
 
 @app.get("/files")

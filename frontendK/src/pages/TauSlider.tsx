@@ -5,7 +5,7 @@ import type { Layout } from "plotly.js";
 const API_URL = "http://127.0.0.1:8000/compute_temp";
 
 const TauSlider: React.FC = () => {
-    const [tau, setTau] = useState(0.5);
+    const [tau, setTau] = useState(0.0);
     const plotRef = useRef<HTMLDivElement>(null);
 
     async function fetchTemperatureData(tau: number) {
@@ -60,16 +60,16 @@ const TauSlider: React.FC = () => {
     return (
         <div className="flex flex-col items-center bg-[#0d1117] min-h-screen text-[#c9d1d9] p-6">
             <h2 className="text-2xl font-semibold mb-2">
-                Temperature vs Position (τ adjustable)
+                Temperature vs Position (time adjustable)
             </h2>
             <p className="mb-2">
                 τ = <span className="font-mono">{tau.toFixed(2)}</span> s
             </p>
             <input
                 type="range"
-                min="0.5"
+                min="0"
                 max="10000"
-                step="10"
+                step="0.5"
                 value={tau}
                 onChange={(e) => setTau(parseFloat(e.target.value))}
                 className="w-1/2 accent-blue-400 mb-6"

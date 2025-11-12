@@ -1,4 +1,4 @@
-# app/solutions/s3_3_stream.py
+# app/solutions/s3_2.py
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -7,8 +7,8 @@ from scipy.special import erf
 import sys
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
-OUTPUT_DIR = os.path.join(BASE_DIR, "output", "2_2")  # change "2_2" to your question ID
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "3_2")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
@@ -87,7 +87,7 @@ def stream_s3_2(params):
         Ts = float(params.get("Ts", 373))
         alpha = float(params.get("alpha", 1e-5))
         L = float(params.get("L", 5))
-        output_dir = os.path.join(os.getcwd(), "output")
+        output_dir = OUTPUT_DIR
         os.makedirs(output_dir, exist_ok=True)
 
         yield flush_line(f"Starting collocation-based PDE solver for n = {n}...")
@@ -99,11 +99,9 @@ def stream_s3_2(params):
         y = np.zeros(n + 2)
 
         if n < 20:
-            yield flush_line("🔹 Using polynomial differentiation method (small n)")
             A = find_A(n, x)
             B = find_B(n, x)
         else:
-            yield flush_line("🔹 Using barycentric differentiation method (large n)")
             D = diff_matrix(x)
             A = D
             B = D @ D

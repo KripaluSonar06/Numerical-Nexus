@@ -1,4 +1,4 @@
-# app/solutions/s3_1_stream.py
+# app/solutions/s2_2.py
 import numpy as np
 import csv
 import sys
@@ -7,8 +7,8 @@ from numpy.polynomial import polynomial as P_mod
 from numpy.polynomial import legendre as L
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # root of project
-OUTPUT_DIR = os.path.join(BASE_DIR, "output", "2_2")  # change "2_2" to your question ID
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+OUTPUT_DIR = os.path.join(BASE_DIR, "output", "2_2")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ============================================================
@@ -100,10 +100,10 @@ def stream_s2_2(params):
         yield flush_line(f"Computing {n_target}-order Shifted Legendre Polynomial...")
 
         # Filenames
-        COEFFS_FILE = f"legendre_coefficients.csv"
-        COMPANION_FILE = f"companion_matrix.csv"
-        ROOTS_FILE = f"legendre_roots.csv"
-        X_SOLUTION_FILE = f"x_solution_lu.csv"
+        COEFFS_FILE = os.path.join(OUTPUT_DIR, "legendre_coefficients.csv")
+        COMPANION_FILE = os.path.join(OUTPUT_DIR, "companion_matrix.csv")
+        ROOTS_FILE = os.path.join(OUTPUT_DIR, "legendre_roots.csv")
+        X_SOLUTION_FILE = os.path.join(OUTPUT_DIR, "x_solution_lu.csv")
 
         # Step 1: Compute coefficients
         p_leg_basis = L.Legendre.basis(n_target, domain=[0, 1])

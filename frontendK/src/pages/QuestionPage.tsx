@@ -42,9 +42,11 @@ const QuestionPage = () => {
       question: 'Find the first factorial in a given range that is NOT a Harshad number. A Harshad number is divisible by the sum of its digits.',
       inputs: [
         { id: 'start', label: 'Start searching from', type: 'number', placeholder: '1' },
-        { id: 'end', label: 'End search at', type: 'number', placeholder: '20' }
+        { id: 'end', label: 'End search at', type: 'number', placeholder: '500' }
       ],
       hasTerminal: true,
+      hasPDF: true,
+      pdfUrl: '/Q1.pdf',
       sampleCode: `def factorial(i):
     f = 1;
     while i:
@@ -94,6 +96,8 @@ while True:
         { id: 'update', label: 'How frequent you want to be updated?', type: 'number', placeholder: '10' }
       ],
       hasTerminal: true,
+      hasPDF: true,
+      pdfUrl: '/Q1.pdf',
       sampleCode: `def Check_Harshad(f):
     num = str(f)
     sum = 0
@@ -162,18 +166,12 @@ B. Determine the companion matrix of this polynomial
 C. Determine the roots using eigenvalues via LU decomposition
 D. Solve Ax=b where b={1,2,...n} using LU decomposition
 E. Find smallest and largest roots using Newton-Raphson method`,
-      subquestions: [
-        { id: 'A', title: 'Modified Legendre Polynomial', outputType: 'csv', filename: 'a.csv' },
-        { id: 'B', title: 'Companion Matrix', outputType: 'csv', filename: 'b.csv' },
-        { id: 'C', title: 'Roots via LU Decomposition', outputType: 'csv', filename: 'c.csv' },
-        { id: 'D', title: 'Solution of Ax=b', outputType: 'csv', filename: 'd.csv' },
-        { id: 'E', title: 'Newton-Raphson Roots', outputType: 'text', label: 'Smallest and Largest Roots' }
-      ],
       inputs: [
         { id: 'n', label: 'Polynomial Order (n)', type: 'number', placeholder: '5' }
       ],
       hasTerminal: true,
-      hasCSV: true,
+      hasPDF: true,
+      pdfUrl: '/Q1.pdf',
       sampleCode: `import numpy as np
 import csv
 import sys
@@ -551,7 +549,7 @@ if __name__ == "__main__":
     except ValueError:
         print("Error: Invalid input. Please enter an integer.")
 
-    print("\n--- Done.. ---")`
+    print("\n--- Done ---")`
     },
     '3-Q1': {
       title: 'Q1: Gauss-Legendre Polynomial Analysis',
@@ -562,14 +560,9 @@ if __name__ == "__main__":
         { id: 'n_matrices', label: 'n for A, B matrices', type: 'number', placeholder: '3' }
       ],
       hasTerminal: true,
-      hasCSV: true,
       hasImage: true,
-      outputs: [
-        { type: 'csv', filename: 'roots-weights.csv', title: 'Roots and Weights' },
-        { type: 'csv', filename: 'A_matrix.csv', title: 'A Matrix' },
-        { type: 'csv', filename: 'B_matrix.csv', title: 'B Matrix' },
-        { type: 'image', filename: 'roots-weights.png', title: 'Roots vs Weights Plot' }
-      ],
+      hasPDF: true,
+      pdfUrl: '/Q2.pdf',
       sampleCode: `import numpy as np
 from numpy.polynomial.legendre import leggauss
 import matplotlib.pyplot as plt
@@ -704,7 +697,7 @@ os.startfile("B_matrix.csv")`
       ],
       hasTerminal: true,
       hasPDF: true,
-      pdfUrl: '/Q2.pdf', // TODO: Add Q2.pdf to public folder
+      pdfUrl: '/Q2.pdf',
       sampleCode: `import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -868,26 +861,6 @@ plt.show()`
 
   const currentQuestion = questionData[questionId || ''];
 
-  // Mock CSV data generator - TODO: Replace with actual computation results
-  const generateMockCSV = (type: string) => {
-    switch (type) {
-      case 'a.csv':
-        return [
-        ];
-      case 'b.csv':
-        return [
-        ];
-      case 'roots-weights.csv':
-        return [
-        ];
-      case 'A_matrix.csv':
-        return [
-        ];
-      default:
-        return [];
-    }
-  };
-
   // =============================================
   // BACKEND INTEGRATION FOR COMPUTATION
   // =============================================
@@ -1002,11 +975,6 @@ plt.show()`
     }
   };
 
-
-
-
-
-
   const handleMarkComplete = () => {
     toggleCompletion(questionId || '');
     toast({
@@ -1099,7 +1067,7 @@ plt.show()`
                   </p>
                 </div>
 
-                {/* PDF Button for Assignment 3 Q2 */}
+                {/* PDF Button*/}
                 {currentQuestion?.hasPDF && (
                   <Button
                     onClick={() => setShowPDF(true)}
@@ -1111,6 +1079,7 @@ plt.show()`
                   </Button>
                 )}
 
+                {/* INPUTS */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-foreground">Input Parameters</h4>
                   {currentQuestion?.inputs.map((input: any) => (
@@ -1132,7 +1101,6 @@ plt.show()`
                   onClick={handleCompute}
                   className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   size="lg"
-                //disabled={showSolution}
                 >
                   <Play className="w-4 h-4 mr-2" />
                   {showSolution ? 'Solution Generated' : 'Get Solution'}
@@ -1161,6 +1129,25 @@ plt.show()`
                   {currentQuestion?.hasTerminal && !showCode && (
                     <TerminalWindow lines={terminalLines} isActive={showSolution} isComputing={isComputing} />
                   )}
+                  
+                  {/* Image Preview Section */}
+                  {availableFiles.some(f => f.endsWith(".png")) && (
+                    <div className="mt-6 space-y-4">
+                      <h3 className="text-lg font-semibold text-white">Generated Images</h3>
+                      {availableFiles
+                        .filter(f => f.endsWith(".png"))
+                        .map((img) => (
+                          <img
+                            key={img}
+                            src={`http://127.0.0.1:8000/download/${encodeURIComponent(img)}`}
+                            alt={img.split("/").pop()}
+                            className="rounded-lg border border-gray-700 w-full max-w-3xl"
+                          />
+                        ))}
+                    </div>
+                  )}
+
+                  {/* SHOW FILES */}
                   {availableFiles.length > 0 && (
                     <div className="mt-6 p-4 border border-gray-700 rounded-lg bg-gray-900">
                       <h3 className="text-xl font-semibold mb-3 text-white">Generated Files</h3>
@@ -1178,85 +1165,6 @@ plt.show()`
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  )}
-
-
-                  {/* CSV Outputs */}
-                  {currentQuestion?.hasCSV && !showCode && (
-                    <Tabs defaultValue={currentQuestion?.subquestions?.[0]?.id || currentQuestion?.outputs?.[0]?.filename} className="w-full">
-                      <TabsList className="glass w-full justify-start overflow-x-auto">
-                        {/* For Q2 with subquestions */}
-                        {currentQuestion?.subquestions?.map((sub: any) => (
-                          sub.outputType === 'csv' && (
-                            <TabsTrigger key={sub.id} value={sub.id}>
-                              {sub.title}
-                            </TabsTrigger>
-                          )
-                        ))}
-                        {/* For Q1 with outputs array */}
-                        {currentQuestion?.outputs?.filter((out: any) => out.type === 'csv').map((output: any) => (
-                          <TabsTrigger key={output.filename} value={output.filename}>
-                            {output.title}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-
-                      {/* CSV Tab Contents for subquestions */}
-                      {currentQuestion?.subquestions?.map((sub: any) => (
-                        sub.outputType === 'csv' && (
-                          <TabsContent key={sub.id} value={sub.id}>
-                            <CSVTable
-                              data={generateMockCSV(sub.filename)}
-                              filename={sub.filename}
-                            />
-                          </TabsContent>
-                        )
-                      ))}
-
-                      {/* CSV Tab Contents for outputs */}
-                      {currentQuestion?.outputs?.filter((out: any) => out.type === 'csv').map((output: any) => (
-                        <TabsContent key={output.filename} value={output.filename}>
-                          <CSVTable
-                            data={generateMockCSV(output.filename)}
-                            filename={output.filename}
-                          />
-                        </TabsContent>
-                      ))}
-                    </Tabs>
-                  )}
-                  {questionId === "3-Q2" && availableFiles.length > 0 && (
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={() => navigate("/s3_2_plot")}
-                        className="px-6 py-2 rounded-lg bg-gradient-to-r from-accent to-primary text-white font-semibold hover:opacity-90 transition"
-                      >
-                        View Interactive Plot
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Image Output */}
-                  {currentQuestion?.hasImage && !showCode && availableFiles.some(f => f.endsWith(".png")) && (
-                    <ImageViewer
-                      key={availableFiles.find(f => f.endsWith(".png"))}
-                      src={`http://127.0.0.1:8000/files/${availableFiles.find(f => f.endsWith(".png"))}?t=${Date.now()}`}
-                      alt="Generated Output"
-                      filename={availableFiles.find(f => f.endsWith(".png")) || ""}
-                    />
-                  )}
-
-
-                  {/* Text Output for Q2E */}
-                  {currentQuestion?.subquestions?.some((sub: any) => sub.outputType === 'text') && !showCode && (
-                    <div className="glass-strong rounded-lg p-6">
-                      <h4 className="text-lg font-semibold text-foreground mb-4">
-                        {currentQuestion.subquestions.find((sub: any) => sub.outputType === 'text')?.title}
-                      </h4>
-                      <div className="bg-card/20 rounded-lg p-4 font-mono text-sm">
-                        {/* <p className="text-muted-foreground">Smallest root: -0.9061798</p>
-                        <p className="text-muted-foreground">Largest root: 0.9061798</p> */}
-                      </div>
                     </div>
                   )}
 
