@@ -11,6 +11,7 @@ import QuestionPage from "./pages/QuestionPage";
 import ThankYouPage from "./pages/ThankYouPage";
 import NotFound from "./pages/NotFound";
 import TauSlider from "./pages/TauSlider";
+import S3_2PlotPage from "./pages/s3_2PlotPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/assignment/:assignmentId" element={<AssignmentDetailsPage />} />
             <Route path="/assignment/:assignmentId/question/:questionId" element={<QuestionPage />} />
             <Route path="/slider" element={<TauSlider />} />
+            <Route path="/s3_2_plot" element={<S3_2PlotPage />} />
             <Route path="/thank-you" element={<ThankYouPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

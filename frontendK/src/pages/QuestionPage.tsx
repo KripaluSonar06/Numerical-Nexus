@@ -35,7 +35,7 @@ const QuestionPage = () => {
 
   const isCompleted = completedQuestions[questionId || ''];
 
-const questionData: Record<string, any> = {
+  const questionData: Record<string, any> = {
     '2-Q1A': {
       title: 'Q1A: First Non-Harshad Factorial',
       description: 'Find the first factorial which is not a Harshad number',
@@ -907,117 +907,124 @@ plt.show()`
     }
   };
 
-// =============================================
-// BACKEND INTEGRATION FOR COMPUTATION
-// =============================================
-const handleCompute = async () => {
-  try {
-    // Switch to Solution tab instantly
-    setActiveTab("solution");
-    setShowSolution(true);
-    setIsComputing(true);
-    setAvailableFiles([]); // clear previous files before computing
+  // =============================================
+  // BACKEND INTEGRATION FOR COMPUTATION
+  // =============================================
+  const handleCompute = async () => {
+    try {
+      // Switch to Solution tab instantly
+      setActiveTab("solution");
+      setShowSolution(true);
+      setIsComputing(true);
+      setAvailableFiles([]); // clear previous files before computing
 
-    // Reset terminal
-    setTerminalLines([{ text: "🔌 Connecting to backend...", type: "info" }]);
+      // Reset terminal
+      setTerminalLines([{ text: "🔌 Connecting to backend...", type: "info" }]);
 
-    // Map Question ID to backend endpoint
-    const endpointMap: Record<string, string> = {
-      "2-Q1A": "2_1A",
-      "2-Q1B": "2_1B",
-      "2-Q2": "2_2",
-      "3-Q1": "3_1",
-      "3-Q2": "3_2",
-      "3-Q3": "3_3",
-    };
+      // Map Question ID to backend endpoint
+      const endpointMap: Record<string, string> = {
+        "2-Q1A": "2_1A",
+        "2-Q1B": "2_1B",
+        "2-Q2": "2_2",
+        "3-Q1": "3_1",
+        "3-Q2": "3_2",
+      };
 
-    const endpoint = endpointMap[questionId];
-    if (!endpoint) {
+      const endpoint = endpointMap[questionId];
+      if (!endpoint) {
+        toast({
+          title: "Invalid Question",
+          description: "No backend endpoint found for this question.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const url = `http://127.0.0.1:8000/stream/${endpoint}`;
+
+      // Call backend API (streaming)
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ params: inputs }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Backend error: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let buffer = "";
+      setTerminalLines((prev) => [
+        ...prev,
+        { text: `Connected to ${url}`, type: "success" },
+        { text: "📡 Receiving stream...", type: "info" },
+      ]);
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          if (line.includes("---END---")) {
+            setTerminalLines((prev) => [
+              ...prev,
+              { text: "✅ Computation complete.", type: "success" },
+            ]);
+            setIsComputing(false);
+
+            try {
+              const res = await fetch("http://127.0.0.1:8000/files");
+              const data = await res.json();
+              setAvailableFiles(data.available_files || []);
+            } catch (err) {
+              console.error("Error fetching files:", err);
+            }
+
+            toast({
+              title: "Computation Complete ✅",
+              description: "Streaming completed successfully.",
+            });
+
+            // ✅ NEW: Navigate to dynamic plot after solving 3-Q2
+            if (questionId === "3-Q2") {
+              navigate("/s3_2_plot");
+            }
+
+            return;
+          }
+
+          // Append each line instantly
+          setTerminalLines((prev) => [...prev, { text: line, type: "output" }]);
+        }
+      }
+
+      setIsComputing(false);
       toast({
-        title: "Invalid Question",
-        description: "No backend endpoint found for this question.",
+        title: "Computation Complete ✅",
+        description: "Streaming finished.",
+      });
+    } catch (error: any) {
+      console.error("Streaming error:", error);
+      setIsComputing(false);
+      setTerminalLines([
+        { text: "❌ Streaming error occurred.", type: "error" },
+        { text: error.message || "Unknown error occurred.", type: "error" },
+      ]);
+      toast({
+        title: "Backend Error",
+        description: error.message || "Unknown error occurred.",
         variant: "destructive",
       });
-      return;
     }
-
-    const url = `http://127.0.0.1:8000/stream/${endpoint}`;
-
-    // Call backend API (streaming)
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ params: inputs }),
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Backend error: ${response.status}`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-
-    let buffer = "";
-    setTerminalLines((prev) => [
-      ...prev,
-      { text: `Connected to ${url}`, type: "success" },
-      { text: "📡 Receiving stream...", type: "info" },
-    ]);
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split(/\r?\n/);
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        if (line.includes("---END---")) {
-          setTerminalLines((prev) => [
-            ...prev,
-            { text: "✅ Computation complete.", type: "success" },
-          ]);
-          setIsComputing(false);
-           try {
-            const res = await fetch("http://127.0.0.1:8000/files");
-            const data = await res.json();
-            setAvailableFiles(data.available_files || []);
-          } catch (err) {
-            console.error("Error fetching files:", err);
-          }
-          toast({
-            title: "Computation Complete ✅",
-            description: "Streaming completed successfully.",
-          });
-          return;
-        }
-
-        // Append each line instantly
-        setTerminalLines((prev) => [...prev, { text: line, type: "output" }]);
-      }
-    }
-
-    setIsComputing(false);
-    toast({
-      title: "Computation Complete ✅",
-      description: "Streaming finished.",
-    });
-  } catch (error: any) {
-    console.error("Streaming error:", error);
-    setIsComputing(false);
-    setTerminalLines([
-      { text: "❌ Streaming error occurred.", type: "error" },
-      { text: error.message || "Unknown error occurred.", type: "error" },
-    ]);
-    toast({
-      title: "Backend Error",
-      description: error.message || "Unknown error occurred.",
-      variant: "destructive",
-    });
-  }
-};
+  };
 
 
 
@@ -1149,7 +1156,7 @@ const handleCompute = async () => {
                   onClick={handleCompute}
                   className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   size="lg"
-                  //disabled={showSolution}
+                //disabled={showSolution}
                 >
                   <Play className="w-4 h-4 mr-2" />
                   {showSolution ? 'Solution Generated' : 'Get Solution'}
@@ -1224,13 +1231,13 @@ const handleCompute = async () => {
                   )}
 
                   {/* Image Output */}
-                 {currentQuestion?.hasImage && !showCode && availableFiles.some(f => f.endsWith(".png")) && (
-                  <ImageViewer
-                    key={availableFiles.find(f => f.endsWith(".png"))}
-                    src={`http://127.0.0.1:8000/files/${availableFiles.find(f => f.endsWith(".png"))}?t=${Date.now()}`}
-                    alt="Generated Output"
-                    filename={availableFiles.find(f => f.endsWith(".png")) || ""}
-                  />
+                  {currentQuestion?.hasImage && !showCode && availableFiles.some(f => f.endsWith(".png")) && (
+                    <ImageViewer
+                      key={availableFiles.find(f => f.endsWith(".png"))}
+                      src={`http://127.0.0.1:8000/files/${availableFiles.find(f => f.endsWith(".png"))}?t=${Date.now()}`}
+                      alt="Generated Output"
+                      filename={availableFiles.find(f => f.endsWith(".png")) || ""}
+                    />
                   )}
 
 
