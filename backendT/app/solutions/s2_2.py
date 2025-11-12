@@ -95,10 +95,10 @@ def stream_s2_2(params):
         yield flush_line(f"Computing {n_target}-order Shifted Legendre Polynomial...")
 
         # Filenames
-        COEFFS_FILE = f"legendre_coefficients_{n_target}.csv"
-        COMPANION_FILE = f"companion_matrix_{n_target}.csv"
-        ROOTS_FILE = f"legendre_roots_{n_target}.csv"
-        X_SOLUTION_FILE = f"x_solution_lu_{n_target}.csv"
+        COEFFS_FILE = f"legendre_coefficients.csv"
+        COMPANION_FILE = f"companion_matrix.csv"
+        ROOTS_FILE = f"legendre_roots.csv"
+        X_SOLUTION_FILE = f"x_solution_lu.csv"
 
         # Step 1: Compute coefficients
         p_leg_basis = L.Legendre.basis(n_target, domain=[0, 1])

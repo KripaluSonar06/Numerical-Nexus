@@ -873,37 +873,18 @@ plt.show()`
     switch (type) {
       case 'a.csv':
         return [
-          ['Coefficient', 'Value'],
-          ['a0', '1.0'],
-          ['a1', '2.5'],
-          ['a2', '-0.5'],
-          ['a3', '0.75']
         ];
       case 'b.csv':
         return [
-          ['Row', 'Col1', 'Col2', 'Col3'],
-          ['1', '0', '1', '0'],
-          ['2', '0', '0', '1'],
-          ['3', '-0.5', '0', '0']
         ];
       case 'roots-weights.csv':
         return [
-          ['Root', 'Weight'],
-          ['-0.906', '0.236'],
-          ['-0.538', '0.478'],
-          ['0.000', '0.569'],
-          ['0.538', '0.478'],
-          ['0.906', '0.236']
         ];
       case 'A_matrix.csv':
         return [
-          ['', 'x1', 'x2', 'x3'],
-          ['x1', '1.0', '0.5', '0.3'],
-          ['x2', '0.5', '1.0', '0.4'],
-          ['x3', '0.3', '0.4', '1.0']
         ];
       default:
-        return [['Data', 'Value'], ['Result', '1.234']];
+        return [];
     }
   };
 
@@ -981,7 +962,7 @@ plt.show()`
             setIsComputing(false);
 
             try {
-              const res = await fetch("http://127.0.0.1:8000/files");
+              const res = await fetch(`http://127.0.0.1:8000/files/${endpoint}`);
               const data = await res.json();
               setAvailableFiles(data.available_files || []);
             } catch (err) {
@@ -992,11 +973,6 @@ plt.show()`
               title: "Computation Complete ✅",
               description: "Streaming completed successfully.",
             });
-
-            // ✅ NEW: Navigate to dynamic plot after solving 3-Q2
-            if (questionId === "3-Q2") {
-              navigate("/s3_2_plot");
-            }
 
             return;
           }
@@ -1185,6 +1161,26 @@ plt.show()`
                   {currentQuestion?.hasTerminal && !showCode && (
                     <TerminalWindow lines={terminalLines} isActive={showSolution} isComputing={isComputing} />
                   )}
+                  {availableFiles.length > 0 && (
+                    <div className="mt-6 p-4 border border-gray-700 rounded-lg bg-gray-900">
+                      <h3 className="text-xl font-semibold mb-3 text-white">Generated Files</h3>
+                      <ul className="list-disc pl-6 text-gray-300">
+                        {availableFiles.map((file) => (
+                          <li key={file}>
+                            <a
+                              href={`http://127.0.0.1:8000/download/${encodeURIComponent(file)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:underline"
+                            >
+                              {file.split("/").pop()}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
 
                   {/* CSV Outputs */}
                   {currentQuestion?.hasCSV && !showCode && (
@@ -1229,6 +1225,16 @@ plt.show()`
                       ))}
                     </Tabs>
                   )}
+                  {questionId === "3-Q2" && availableFiles.length > 0 && (
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={() => navigate("/s3_2_plot")}
+                        className="px-6 py-2 rounded-lg bg-gradient-to-r from-accent to-primary text-white font-semibold hover:opacity-90 transition"
+                      >
+                        View Interactive Plot
+                      </button>
+                    </div>
+                  )}
 
                   {/* Image Output */}
                   {currentQuestion?.hasImage && !showCode && availableFiles.some(f => f.endsWith(".png")) && (
@@ -1248,8 +1254,8 @@ plt.show()`
                         {currentQuestion.subquestions.find((sub: any) => sub.outputType === 'text')?.title}
                       </h4>
                       <div className="bg-card/20 rounded-lg p-4 font-mono text-sm">
-                        <p className="text-muted-foreground">Smallest root: -0.9061798</p>
-                        <p className="text-muted-foreground">Largest root: 0.9061798</p>
+                        {/* <p className="text-muted-foreground">Smallest root: -0.9061798</p>
+                        <p className="text-muted-foreground">Largest root: 0.9061798</p> */}
                       </div>
                     </div>
                   )}

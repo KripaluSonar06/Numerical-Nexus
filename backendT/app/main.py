@@ -30,6 +30,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # project root (one level
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")  # project_root/output
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+def get_question_dir(question_id: str) -> str:
+    """Return (and ensure) a subfolder for a given question inside output/."""
+    folder = os.path.join(OUTPUT_DIR, question_id)
+    os.makedirs(folder, exist_ok=True)
+    return folder
+
+def clear_question_dir(question_id: str):
+    """Delete all existing files in a specific question's folder."""
+    folder = get_question_dir(question_id)
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"⚠️ Could not delete {file_path}: {e}")
+
 # ===============================================================
 # Include additional routers (for τ slider API)
 # ===============================================================
@@ -92,47 +109,56 @@ async def stream_2_1b(req: SolveRequest):
 @app.post("/stream/2_2")
 async def stream_2_2(req: SolveRequest):
     from app.solutions import s2_2
+    question_id = "2_2"
+    clear_question_dir(question_id)
     return make_stream_response(s2_2.stream_s2_2, req.params)
 
 @app.post("/stream/3_1")
 async def stream_3_1(req: SolveRequest):
     from app.solutions import s3_1
+    question_id = "3_1"
+    clear_question_dir(question_id)
     return make_stream_response(s3_1.stream_s3_1, req.params)
 
 @app.post("/stream/3_2")
 async def stream_3_2(req: SolveRequest):
     from app.solutions import s3_2
+    question_id = "3_2"
+    clear_question_dir(question_id)
     return make_stream_response(s3_2.stream_s3_2, req.params)
 
 # ===============================================================
 # FILE MANAGEMENT ROUTES
 # ===============================================================
-@app.get("/files")
-async def list_files():
-    """List all CSV and PNG files in the output folder."""
+@app.get("/files/{question_id}")
+async def list_files(question_id: str):
+    """List all CSV/PNG files in the subfolder for a specific question."""
     try:
-        files = [f for f in os.listdir(OUTPUT_DIR) if f.endswith((".csv", ".png"))]
+        folder = get_question_dir(question_id)
+        files = [
+            f"{question_id}/{f}"
+            for f in os.listdir(folder)
+            if f.endswith((".csv", ".png"))
+        ]
         files.sort()
         return {"available_files": files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/files/{filename}")
-async def get_file(filename: str):
-    """Serve CSV or PNG file from the output directory."""
-    file_path = os.path.join(OUTPUT_DIR, filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
 
-    # MIME type detection
-    if filename.lower().endswith(".csv"):
-        media_type = "text/csv"
-    elif filename.lower().endswith(".png"):
-        media_type = "image/png"
-    else:
-        media_type = "application/octet-stream"
+@app.get("/files")
+async def list_all_files():
+    """(Optional) List files from all questions (debugging use only)."""
+    all_files = []
+    for subfolder in os.listdir(OUTPUT_DIR):
+        folder = os.path.join(OUTPUT_DIR, subfolder)
+        if os.path.isdir(folder):
+            for f in os.listdir(folder):
+                if f.endswith((".csv", ".png")):
+                    all_files.append(f"{subfolder}/{f}")
+    all_files.sort()
+    return {"available_files": all_files}
 
-    return FileResponse(file_path, media_type=media_type, filename=filename)
 
 @app.get("/preview/{filename}")
 async def preview_file(filename: str, lines: int = 10):
@@ -149,3 +175,11 @@ async def preview_file(filename: str, lines: int = 10):
         return {"filename": filename, "preview": content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
+
+@app.get("/download/{filename:path}")
+def download_file(filename: str):
+    """Download a file from any subfolder within output/."""
+    file_path = os.path.join(OUTPUT_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path, filename=os.path.basename(file_path))
+    raise HTTPException(status_code=404, detail="File not found")
