@@ -155,6 +155,95 @@ def stream_s2_2(params):
                 writer.writerow([r])
         yield flush_line(f"Roots saved to {ROOTS_FILE}")
 
+                # Step 3B: LU-based Eigenvalue Approximation & Comparison
+        yield flush_line("\n--- Comparing with LU-based Eigenvalue Method ---")
+        try:
+            # Import helper functions (use teammate's logic inline)
+            def lu_decomposition(A):
+                A = A.copy().astype(float)
+                n = A.shape[0]
+                P = np.eye(n)
+                L = np.zeros((n, n))
+                U = A.copy()
+                for k in range(n):
+                    pivot = np.argmax(abs(U[k:, k])) + k
+                    if pivot != k:
+                        U[[k, pivot], :] = U[[pivot, k], :]
+                        P[[k, pivot], :] = P[[pivot, k], :]
+                        L[[k, pivot], :k] = L[[pivot, k], :k]
+                    L[k, k] = 1.0
+                    for i in range(k + 1, n):
+                        if abs(U[k, k]) < 1e-14:
+                            continue
+                        L[i, k] = U[i, k] / U[k, k]
+                        U[i, k:] -= L[i, k] * U[k, k:]
+                return P, L, U
+
+            def determinant_from_LU(P, L, U):
+                sign = np.linalg.det(P)
+                detU = np.prod(np.diag(U))
+                return sign * detU
+
+            def eigenvalues_via_LU(C, search_min=-2, search_max=2, steps=1500):
+                n = C.shape[0]
+                eigenvalues = []
+                prev_det = None
+                lambdas = np.linspace(search_min, search_max, steps)
+                for lam in lambdas:
+                    A = C - lam * np.eye(n)
+                    try:
+                        P, L, U = lu_decomposition(A)
+                        det_val = determinant_from_LU(P, L, U)
+                    except Exception:
+                        det_val = np.nan
+                    if prev_det is not None and not np.isnan(det_val):
+                        if np.sign(prev_det) != np.sign(det_val):
+                            idx = np.where(lambdas == lam)[0][0]
+                            prev_lam = lambdas[idx - 1]
+                            eigenvalues.append((lam + prev_lam) / 2)
+                    prev_det = det_val
+                return np.array(eigenvalues)
+
+            def newton_refine(poly_coeffs, x0, tol=1e-10, max_iter=50):
+                p = np.poly1d(poly_coeffs)
+                dp = np.polyder(p)
+                x = x0
+                for _ in range(max_iter):
+                    fx = p(x)
+                    dfx = dp(x)
+                    if abs(dfx) < 1e-14:
+                        break
+                    x_new = x - fx / dfx
+                    if abs(x_new - x) < tol:
+                        return x_new
+                    x = x_new
+                return x
+
+            # Step 1: Approximation via LU determinant scanning
+            yield flush_line("Finding approximate eigenvalues using LU determinant sign changes...")
+            approx_eigs = eigenvalues_via_LU(companion_mat, -2, 2, steps=2000)
+            yield flush_line(f"Approximate eigenvalues found ({len(approx_eigs)}): {approx_eigs}")
+
+            # Step 2: Refinement
+            yield flush_line("Refining eigenvalues using Newton–Raphson...")
+            coeffs = np.poly(companion_mat)
+            refined = [newton_refine(coeffs, ev) for ev in approx_eigs]
+            refined = np.sort(np.array(refined))
+
+            # Save to output file
+            LU_ROOTS_FILE = os.path.join(OUTPUT_DIR, "legendre_roots_LU.csv")
+            np.savetxt(LU_ROOTS_FILE, refined, delimiter=",")
+            yield flush_line(f"Refined LU-based roots saved to {LU_ROOTS_FILE}")
+
+            # Step 3: Compare
+            yield flush_line("\n--- Comparison with np.linalg.eigh roots ---")
+            for i, (exact, approx) in enumerate(zip(shifted_roots, refined)):
+                yield flush_line(f"Root {i+1}: Exact={exact:.6f},  LU-Based={approx:.6f}")
+            yield flush_line("LU-based computation successful up to n ≈ 20.")
+        except Exception as e:
+            yield flush_line(f"LU-based eigenvalue section skipped due to error: {e}")
+
+
         # Step 4: LU Solver
         yield flush_line("\n--- Solving Ax=b using LU decomposition ---")
         A = companion_mat
