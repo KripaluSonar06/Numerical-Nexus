@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import createPlotlyComponent from "react-plotly.js/factory";
-import Plotly from "plotly.js-dist-min";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Plot from "react-plotly.js";
 
-const Plot = createPlotlyComponent(Plotly);
 
 const S3_2PlotPage: React.FC = () => {
     const navigate = useNavigate();
@@ -18,11 +16,13 @@ const S3_2PlotPage: React.FC = () => {
     const [tau, setTau] = useState(0.0);
     const [data, setData] = useState<{ X: number[]; T_coll: number[]; T_anal: number[] } | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const backendURL = "http://127.0.0.1:8000/compute_temp"; // backend endpoint
+    const backendURL = "http://127.0.0.1:8000/compute_temp";
 
     const fetchData = async (tauVal: number) => {
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch(backendURL, {
                 method: "POST",
@@ -32,16 +32,28 @@ const S3_2PlotPage: React.FC = () => {
                     ...params,
                 }),
             });
+            
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            
             const json = await res.json();
-            setData(json);
+            console.log("Backend response:", json);
+            
+            // Validate data structure
+            if (json.X && json.T_coll && json.T_anal) {
+                setData(json);
+            } else {
+                setError("Invalid data format from backend");
+            }
         } catch (error) {
             console.error("Error fetching data:", error);
+            setError(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
         } finally {
             setLoading(false);
         }
     };
 
-    // Fetch once on load
     useEffect(() => {
         fetchData(tau);
     }, []);
@@ -62,11 +74,12 @@ const S3_2PlotPage: React.FC = () => {
                 Back to Assignment
             </button>
 
-            {/* --- MOVE PLOT TO TOP --- */}
-            <div className="mb-6">
-                {loading ? (
-                    <p>Computing...</p>
-                ) : data ? (
+            {/* Plot Section */}
+            <div className="mb-6 border border-gray-700 rounded p-4">
+                {loading && <p className="text-yellow-400">Computing...</p>}
+                {error && <p className="text-red-500">{error}</p>}
+                {data && !loading ? (
+                    // <Plot></Plot>
                     <Plot
                         data={[
                             {
@@ -87,19 +100,17 @@ const S3_2PlotPage: React.FC = () => {
                         layout={{
                             title: {
                                 text: `Temperature Profiles for τ = ${tau.toFixed(2)} s`,
-                                font: { color: "#000000ff" },
                             },
-                            xaxis: { title: { text: "X (m)" }, color: "#000000ff" },
-                            yaxis: { title: { text: "Temperature (K)" }, color: "#000000ff" },
-                            plot_bgcolor: "#ffffffff",
-                            paper_bgcolor: "#ffffffff",
-                            font: { color: "#000000ff" },
+                            xaxis: { title: { text: "X (m)" } },
+                            yaxis: { title: { text: "Temperature (K)" } },
+                            plot_bgcolor: "#f0f0f0",
+                            paper_bgcolor: "#ffffff",
                             height: 500,
-                        } as Partial<Plotly.Layout>}
-                        style={{ width: "100%" }}
+                        } as any}
+                        config={{ responsive: true }}
                     />
                 ) : (
-                    <p>No data yet.</p>
+                    !loading && <p className="text-gray-400">No data yet. Click Run or adjust τ.</p>
                 )}
             </div>
 
@@ -125,7 +136,7 @@ const S3_2PlotPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
                 {Object.entries(params).map(([key, value]) => (
                     <div key={key}>
-                        <label className="block font-medium">{key}</label>
+                        <label className="block font-medium text-sm">{key}</label>
                         <input
                             type="number"
                             name={key}
@@ -141,11 +152,12 @@ const S3_2PlotPage: React.FC = () => {
             {/* Run Button */}
             <button
                 onClick={() => fetchData(tau)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
             >
                 Run
             </button>
         </div>
     );
 };
+
 export default S3_2PlotPage;

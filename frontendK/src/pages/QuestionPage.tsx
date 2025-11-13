@@ -1218,25 +1218,15 @@ plt.show()`
                     })}
                   </ul>
 
-                  {/* Final Answer Section */}
-                  {!showCode && finalAnswer && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="glass-strong rounded-lg p-6 border-2 border-success/30"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="w-6 h-6 text-success mt-1 flex-shrink-0" />
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-success mb-2">
-                            Final Answer
-                          </h4>
-                          <p className="text-foreground font-medium">
-                            {finalAnswer}
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
+                  {questionId === "3-Q2" && (
+                    <div className="mt-6">
+                      <Button
+                        onClick={() => navigate("/s3_2_plot")}
+                        className="bg-indigo-500 text-white"
+                      >
+                        View Temperature Plot
+                      </Button>
+                    </div>
                   )}
 
                   {/* Mark Complete Section */}
