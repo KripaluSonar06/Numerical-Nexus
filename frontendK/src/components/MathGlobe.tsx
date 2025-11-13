@@ -7,7 +7,7 @@ const MathGlobe = () => {
   const globeRef = useRef<THREE.Mesh>(null);
   const symbolsRef = useRef<THREE.Group>(null);
   
-  const symbols = useMemo(() => ['Σ', 'π', '∫', 'e', 'Lₙ', '∞', '√', 'φ', 'δ', 'λ'], []);
+  const symbols = useMemo(() => ['Σ', 'π', '∫', 'e', 'J','∇','∂', '∞', '√', 'φ', 'δ', 'λ'], []);
 
   useFrame((state) => {
     if (globeRef.current) {

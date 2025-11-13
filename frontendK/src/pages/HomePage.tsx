@@ -144,7 +144,7 @@ const HomePage: React.FC = () => {
 
       {/* --- Floating Math Symbols --- */}
       <div className="absolute inset-0 pointer-events-none overflow-visible">
-        {["Σ", "π", "∫", "∞", "√"].map((symbol, i) => (
+        {["Σ", "π", "∫","J","∇","∂", "∞", "√"].map((symbol, i) => (
           <motion.div
             key={i}
             className="absolute text-6xl text-accent/10 font-bold"
