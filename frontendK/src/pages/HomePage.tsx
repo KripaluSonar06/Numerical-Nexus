@@ -8,6 +8,8 @@ import { ArrowRight } from "lucide-react";
 import LiquidEther from "@/components/LiqEther";
 import GradientText from "@/components/GradientText";
 
+
+
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -18,6 +20,7 @@ const HomePage: React.FC = () => {
   ];
 
   return (
+    
     <div className="min-h-screen relative overflow-hidden">
       {/* --- Background Gradient --- */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-purple-950/20 to-background" />
@@ -60,7 +63,7 @@ const HomePage: React.FC = () => {
           className="text-center space-y-3 mt-2 overflow-visible"
         >
           <motion.h1
-            className="text-7xl md:text-10xl font-bold text-gradient-rainbow leading-snug overflow-visible pb-2"
+            className="text-7xl md:text-10xl font-bold text-gradient-rainbow leading-snug overflow-visible "
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}

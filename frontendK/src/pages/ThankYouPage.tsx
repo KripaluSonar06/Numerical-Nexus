@@ -46,6 +46,7 @@ const ThankYouPage = () => {
   }, []);
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-background via-purple-950/20 to-background p-8 flex items-center justify-center">
        <div className="absolute inset-0 -z-10">
         <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -103,7 +104,7 @@ const ThankYouPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h1 className="text-6xl font-bold text-gradient-cyan mb-6">
+          <h1 className="text-6xl font-bold text-gradient-cyan mb-6 pb-2">
             Congratulations!
           </h1>
           <p className="text-2xl text-muted-foreground mb-8">

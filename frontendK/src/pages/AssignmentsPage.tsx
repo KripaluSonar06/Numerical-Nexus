@@ -80,7 +80,7 @@ const AssignmentsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <h1 className="text-5xl font-bold text-gradient-cyan mb-4">
+          <h1 className="text-5xl font-bold text-gradient-cyan mb-4 pb-2">
             Your Assignments
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
@@ -127,7 +127,7 @@ const AssignmentsPage = () => {
                   <div className="flex items-start justify-between mb-6 relative z-20">
                     <div className="flex-1">
                       <h2
-                        className={`text-3xl font-bold mb-2 bg-gradient-to-r ${assignment.color} bg-clip-text text-transparent`}
+                        className={`text-3xl font-bold mb-2 bg-gradient-to-r ${assignment.color} bg-clip-text text-transparent pb-2`}
                       >
                         {assignment.title}
                       </h2>

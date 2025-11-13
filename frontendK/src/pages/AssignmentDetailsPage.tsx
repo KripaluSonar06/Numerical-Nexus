@@ -98,7 +98,7 @@ const AssignmentDetailsPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <h1 className="text-5xl font-bold text-gradient-cyan mb-2">
+            <h1 className="text-5xl font-bold text-gradient-cyan mb-2 pb-2">
               {assignmentTitle}
             </h1>
             <p className="text-xl text-muted-foreground">
