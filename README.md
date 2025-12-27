@@ -4,6 +4,7 @@ Numerical Nexus is a full–stack, interactive learning environment designed to 
 It combines a modern React-based frontend with a FastAPI backend to provide an immersive and high-performance learning experience.
 
 ---
+<img width="1920" height="1080" alt="Screenshot (64)" src="https://github.com/user-attachments/assets/edded7be-1cc5-4dcc-8d83-11b672a2c9f5" />
 
 ## 🚀 Features
 
