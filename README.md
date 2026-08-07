@@ -72,7 +72,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Keyboard click sound feedback
 * Smooth animations and clean layout designed for academic usage.
 
-### 🔹 **6. AI Chatbot Powered by Gemini**
+### 🔹 **6. AI Chatbot Powered by Gemini** (Not implemented , future improvements)
 
 * Integrated floating chatbot available on all pages
 * Uses Google Gemini API (free tier)
@@ -103,7 +103,6 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
 * React Router
 * Framer Motion
 * CSV & Image viewers
-* Gemini chatbot
 
 ### **Backend**
 
