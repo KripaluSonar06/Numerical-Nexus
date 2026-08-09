@@ -1,4 +1,4 @@
-# 📘 Numerical Nexus – Interactive Numerical Methods Learning Platform
+# Numerical Nexus – Interactive Numerical Methods Learning Platform
 
 Numerical Nexus is a full–stack, interactive learning environment designed to help students and developers explore **Numerical Methods** through real-time computation, live streaming outputs, visualizations, and intuitive UI components.
 It combines a modern React-based frontend with a FastAPI backend to provide an immersive and high-performance learning experience.
@@ -7,9 +7,9 @@ It combines a modern React-based frontend with a FastAPI backend to provide an i
 <img width="1920" height="1080" alt="Screenshot (64)" src="https://github.com/user-attachments/assets/edded7be-1cc5-4dcc-8d83-11b672a2c9f5" />
 https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=drive_link
 
-## 🚀 Features
+## Features
 
-### 🔹 **1. Real-Time Streaming Computation (FastAPI)**
+### **1. Real-Time Streaming Computation (FastAPI)**
 
 * Backend solves numerical methods problems such as:
 
@@ -23,7 +23,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Temperature profile PDE calculations
 * Results are streamed *line-by-line* to the frontend terminal for a real “program execution” feel.
 
-### 🔹 **2. Interactive Terminal UI**
+### **2. Interactive Terminal UI**
 
 * Custom-built terminal emulator with:
 
@@ -32,7 +32,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Color-coded logs
   * Activity cursor
 
-### 🔹 **3. Smart File Handling (CSV, PNG, PDF)**
+### **3. Smart File Handling (CSV, PNG, PDF)**
 
 * Backend auto-generates output files for:
 
@@ -48,7 +48,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * PNG as images
   * PDF as document viewer
 
-### 🔹 **4. Question-based Navigation**
+### **4. Question-based Navigation**
 
 * Students navigate assignments:
 
@@ -61,7 +61,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Expandable “Show Code” section
   * Completion tracking
 
-### 🔹 **5. Modern Aesthetic UI**
+### **5. Modern Aesthetic UI**
 
 * Built using:
 
@@ -72,7 +72,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Keyboard click sound feedback
 * Smooth animations and clean layout designed for academic usage.
 
-### 🔹 **6. AI Chatbot Powered by Gemini** (Not implemented , future improvements)
+### **6. AI Chatbot Powered by Gemini** (Not implemented , future improvements)
 
 * Integrated floating chatbot available on all pages
 * Uses Google Gemini API (free tier)
@@ -83,7 +83,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
   * Debugging code
   * Mathematical intuition
 
-### 🔹 **7. Additional Tools**
+### **7. Additional Tools**
 
 * Interactive τ-Slider for PDE visualization
 * 3D/2D plots for assignment simulations
@@ -92,7 +92,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### **Frontend**
 
@@ -119,7 +119,7 @@ https://drive.google.com/drive/folders/1JXxGX9p0s1D4SjQyUUCwATZZCUhsbPI6?usp=dri
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 Numerical-Nexus/
@@ -144,7 +144,7 @@ Numerical-Nexus/
 
 ---
 
-## ▶️ Running the Project
+## Running the Project
 
 ### **Start Backend**
 
@@ -164,7 +164,7 @@ npm run dev
 Both must run simultaneously.
 
 
-## 🎯 Vision & Goal
+## Vision & Goal
 
 This platform is built to help students understand **Numerical Methods not by reading**, but by **seeing**, **experimenting**, and **interacting** with the algorithms live.
 
